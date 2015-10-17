@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from openerp import models, fields
+from openerp import models, fields, api
 
 class Session(models.Model):
     _name = 'openacademy.session'
@@ -20,3 +20,13 @@ class Session(models.Model):
                                 required=True)
     attendee_ids = fields.Many2many(comodel_name='res.partner',
                                     string="Attendees")
+    taken_seats = fields.Float(string="Taken seats",
+                               compute='_compute_taken_seats')
+
+    @api.depends('seats', 'attendee_ids')
+    def _compute_taken_seats(self):
+        for r in self:
+            if not r.seats:
+                r.taken_seats = 0.0
+            else:
+                r.taken_seats = 100.0 * len(r.attendee_ids) / r.seats
