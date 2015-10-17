@@ -14,3 +14,5 @@ class Session(models.Model):
                                 ondelete='cascade',
                                 string='Course',
                                 required=True)
+    attendee_ids = fields.Many2many(comodel_name='res.partner',
+                                    string="Attendees")
