@@ -23,6 +23,17 @@ class Session(models.Model):
     taken_seats = fields.Float(string="Taken seats",
                                compute='_compute_taken_seats')
     active = fields.Boolean(default=True)
+    state = fields.Selection(
+        selection='_selection_state',
+        readonly=True,
+        default='draft',
+    )
+
+    @api.model
+    def _selection_state(self):
+        return [('draft', "Draft"),
+                ('confirmed', "Confirmed"),
+                ('done', "Done")]
 
     @api.depends('seats', 'attendee_ids')
     def _compute_taken_seats(self):
@@ -56,3 +67,15 @@ class Session(models.Model):
                     'message': "Increase seats or remove excess attendees",
                 },
             }
+
+    @api.multi
+    def action_draft(self):
+        self.write({'state': 'draft'})
+
+    @api.multi
+    def action_confirm(self):
+        self.write({'state': 'confirmed'})
+
+    @api.multi
+    def action_done(self):
+        self.write({'state': 'done'})
