@@ -13,7 +13,9 @@ Open Academy module for managing trainings:
 - attendees registration
  """,
  'depends': ['base'],
- 'data': [],
+ 'data': ['views/menus.xml',
+          'views/course_views.xml',
+          ],
  'images': [],
  'demo': ['demo/course.xml',
           ],

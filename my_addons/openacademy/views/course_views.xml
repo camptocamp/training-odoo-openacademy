@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data>
+  <record model="ir.actions.act_window" id="course_list_action">
+    <field name="name">Courses</field>
+    <field name="res_model">openacademy.course</field>
+    <field name="view_type">form</field>
+    <field name="view_mode">tree,form</field>
+    <field name="help" type="html">
+      <p class="oe_view_nocontent_create">Create the first course</p>
+    </field>
+  </record>
+  <menuitem id="courses_menu" name="Courses" parent="openacademy_menu"
+    action="course_list_action"/>
+</data>
+</openerp>
