@@ -9,6 +9,7 @@
           <sheet>
             <group>
               <field name="name"/>
+              <field name="responsible_id"/>
             </group>
             <notebook>
               <page string="Description" name="descr">
@@ -26,14 +27,14 @@
   </record>
 
   <record model="ir.ui.view" id="course_tree_view">
-      <field name="name">course.tree</field>
-      <field name="model">openacademy.course</field>
-      <field name="arch" type="xml">
-        <tree string="Courses">
-          <field name="name"/>
-          <field name="description"/>
-        </tree>
-      </field>
+    <field name="name">course.tree</field>
+    <field name="model">openacademy.course</field>
+    <field name="arch" type="xml">
+      <tree string="Course Tree">
+        <field name="name"/>
+        <field name="responsible_id"/>
+      </tree>
+    </field>
   </record>
 
   <record model="ir.ui.view" id="course_search_view">
