@@ -13,12 +13,15 @@
             </group>
             <notebook>
               <page string="Description" name="descr">
-                <group>
                   <field name="description"/>
-                </group>
               </page>
-              <page string="Infos" name="info">
-                <p>Une page d'informations</p>
+              <page string="Sessions" name="session">
+                  <field name="session_ids">
+                      <tree string="Registered sessions">
+                          <field name="name"/>
+                          <field name="instructor_id"/>
+                      </tree>
+                  </field>
               </page>
             </notebook>
           </sheet>

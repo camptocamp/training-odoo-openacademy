@@ -10,3 +10,5 @@ class Course(models.Model):
                                      ondelete='set null',
                                      string='Responsible',
                                      index=True)
+    session_ids = fields.One2many(comodel_name='openacademy.session',
+                                  inverse_name='course_id', string="Sessions")
