@@ -17,6 +17,7 @@ Open Academy module for managing trainings:
           'views/course_views.xml',
           'views/session_views.xml',
           'views/res_partner_views.xml',
+          'data/res_partner_category.xml',
           ],
  'images': [],
  'demo': ['demo/course.xml',
