@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
 <data>
+  <record model="ir.ui.view" id="course_view_form">
+      <field name="name">course.form</field>
+      <field name="model">openacademy.course</field>
+      <field name="arch" type="xml">
+        <form string="Courses">
+          <sheet>
+            <group>
+              <field name="name"/>
+              <field name="description"/>
+            </group>
+          </sheet>
+        </form>
+      </field>
+  </record>
+
+  <record model="ir.ui.view" id="course_tree_view">
+      <field name="name">course.tree</field>
+      <field name="model">openacademy.course</field>
+      <field name="arch" type="xml">
+        <tree string="Courses">
+          <field name="name"/>
+          <field name="description"/>
+        </tree>
+      </field>
+  </record>
+
   <record model="ir.actions.act_window" id="course_list_action">
     <field name="name">Courses</field>
     <field name="res_model">openacademy.course</field>
