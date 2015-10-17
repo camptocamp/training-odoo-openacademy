@@ -15,6 +15,7 @@ Open Academy module for managing trainings:
  'depends': ['base'],
  'data': [],
  'images': [],
- 'demo': [],
+ 'demo': ['demo/course.xml',
+          ],
  'application': True,
  }
