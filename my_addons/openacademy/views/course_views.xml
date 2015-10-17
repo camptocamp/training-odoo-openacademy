@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
 <data>
-  <record model="ir.ui.view" id="course_view_form">
+  <record model="ir.ui.view" id="course_form_view">
       <field name="name">course.form</field>
       <field name="model">openacademy.course</field>
       <field name="arch" type="xml">
@@ -9,8 +9,17 @@
           <sheet>
             <group>
               <field name="name"/>
-              <field name="description"/>
             </group>
+            <notebook>
+              <page string="Description" name="descr">
+                <group>
+                  <field name="description"/>
+                </group>
+              </page>
+              <page string="Infos" name="info">
+                <p>Une page d'informations</p>
+              </page>
+            </notebook>
           </sheet>
         </form>
       </field>
