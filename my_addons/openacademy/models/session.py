@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from openerp import models, fields, api, exceptions, _
 
+
 class Session(models.Model):
     _name = 'openacademy.session'
 

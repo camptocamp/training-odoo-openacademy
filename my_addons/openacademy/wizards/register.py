@@ -1,5 +1,6 @@
 from openerp import models, fields, api
 
+
 class Register(models.TransientModel):
     _name = 'openacademy.register'
 
