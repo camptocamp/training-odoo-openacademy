@@ -66,4 +66,17 @@ def admin_user_password(ctx):
     )
 ```
 
-5. Customize the demo. Minions should be created automatically on https://demo.odoo-test.camptocamp.ch
+5. You might want to activate the Odoo's demo data, to do so, add:
+
+In docker-compose.yml in the root directory:
+
+```
+  odoo:
+    environment:
+    - DEMO=True
+```
+
+In travis/minion-files/rancher.list, set `DEMO` to `True`.
+
+
+6. Customize the demo. Minions should be created automatically on https://demo.odoo-test.camptocamp.ch
