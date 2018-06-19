@@ -47,7 +47,7 @@ git add .
 git commit -m"generated demo from template"
 ```
 
-4. Change the password for the admin user, in `odoo/songs/install/pre.py`:
+4. Change the password for the admin user, in `odoo/songs/install/pre.py` (**please copy paste the one below** so they all have the same password in lastpass "Shared-C2C-Odoo-External\demo_odoo\[odoo-test] demo test admin user (minions)"):
 
 ```
 @anthem.log
