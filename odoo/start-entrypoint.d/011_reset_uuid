@@ -1,0 +1,37 @@
+#!/bin/bash
+# This file has been generated with 'invoke project.sync'.
+# Do not modify. Any manual change will be lost.
+# Please propose your modification on
+# https://github.com/camptocamp/odoo-template instead.
+
+#
+# Often in development or integration mode, we retrieve a database from a production server
+# with a production database uuid. This script automatically changes
+# the config parameters to set a random uuid in order to fit the need of the license
+# management done by odoo.com
+#
+
+keep_database_uuid=$(echo "${ODOO_KEEP_DATABASE_UUID}" | tr '[:upper:]' '[:lower:]' )
+
+if [ "$keep_database_uuid" = "true" ]; then
+  exit 0
+fi
+
+if [ "$RUNNING_ENV" != "prod" ] ; then
+    if [ "$( psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" )" != '1' ]
+    then
+        echo "Database does not exist, ignoring script"
+        exit 0
+    fi
+    UUID=`cat /proc/sys/kernel/random/uuid`
+    echo "Set new database uuid"
+
+    psql << EOF
+
+    UPDATE ir_config_parameter
+    SET value = '$UUID'
+    WHERE key = 'database.uuid';
+
+EOF
+
+fi

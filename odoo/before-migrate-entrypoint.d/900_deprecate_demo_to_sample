@@ -1,0 +1,20 @@
+#!/bin/bash
+# This file has been generated with 'invoke project.sync'.
+# Do not modify. Any manual change will be lost.
+# Please propose your modification on
+# https://github.com/camptocamp/odoo-template instead.
+
+#
+# Display a warning and action to do to deprecate the
+# MARABUNTA_MODE demo
+# The rationale is that marabunta demo is confusing with
+# odoo demo
+# Here we warn only the developper, no need to spam logs
+# in other environments
+
+if [ "$RUNNING_ENV" == "dev" -a "$MARABUNTA_MODE" == "demo" ] ; then
+
+    echo -e "\033[0:33mDEPRECATED\033[0m: MARABUTA_MODE option 'demo' is deprecated to be replaced by 'sample'."
+    echo -e "            Please run \033[0:37minvoke deprecate.demo-to-sample\033[0m to autofix"
+
+fi

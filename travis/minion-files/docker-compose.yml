@@ -1,0 +1,55 @@
+version: '2'
+services:
+
+  odoo:
+    image: camptocamp/demo_odoo:${DOCKER_TAG}
+    links:
+      - db:db
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+      - RUNNING_ENV=${RUNNING_ENV}
+      - DEMO=${DEMO}
+      - WORKERS=${WORKERS}
+      - MAX_CRON_THREADS=${MAX_CRON_THREADS}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_HANDLER=${LOG_HANDLER}
+      - DB_MAXCONN=${DB_MAXCONN}
+      - LIMIT_MEMORY_SOFT=${LIMIT_MEMORY_SOFT}
+      - LIMIT_MEMORY_HARD=${LIMIT_MEMORY_HARD}
+      - LIMIT_REQUEST=${LIMIT_REQUEST}
+      - LIMIT_TIME_CPU=${LIMIT_TIME_CPU}
+      - LIMIT_TIME_REAL=${LIMIT_TIME_REAL}
+      - MARABUNTA_ALLOW_SERIE=True
+      - MARABUNTA_MODE=${MARABUNTA_MODE}
+      - ODOO_SESSION_REDIS=${ODOO_SESSION_REDIS}
+      - ODOO_SESSION_REDIS_HOST=${ODOO_SESSION_REDIS_HOST}
+      - ODOO_SESSION_REDIS_EXPIRATION=${ODOO_SESSION_REDIS_EXPIRATION}
+      - ODOO_LOGGING_JSON=${ODOO_LOGGING_JSON}
+      - ODOO_CLOUD_PLATFORM_UNSAFE=${ODOO_CLOUD_PLATFORM_UNSAFE}
+        # configured by rancher-minion
+      - ADMIN_PASSWD=${ADMIN_PASSWD}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - ODOO_BASE_URL=${ODOO_BASE_URL}
+      - ODOO_SESSION_REDIS_PREFIX=${ODOO_SESSION_REDIS_PREFIX}
+      - SERVER_WIDE_MODULES=${SERVER_WIDE_MODULES}
+    labels:
+      io.rancher.sidekicks: nginx
+      odoo.publish: true
+
+
+  nginx:
+    image: camptocamp/odoo-nginx:12.0-1.5.0
+    network_mode: "container:odoo"
+    environment:
+      - NGX_ODOO_HOST=127.0.0.1
+    links:
+      - odoo:odoo
+
+
+  db:
+    image: postgres:9.6
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}

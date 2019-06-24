@@ -1,0 +1,22 @@
+# base_dj
+Jinja2
+autopep8
+pylint
+unicodecsv
+# Improve mimetype guessing.
+# Requires `libmagic1` to be installed sys-wide
+python-magic
+
+## PLATFORM
+#redis==2.10.5
+#python-json-logger==0.1.5
+#statsd==3.2.1
+
+## PLATFORM, for s3 storage at Exoscale
+#boto==2.42.0
+
+## PLATFORM, for Swift storage at OVH
+#python-swiftclient==3.4.0
+#python-keystoneclient==3.13.0
+
+## custom

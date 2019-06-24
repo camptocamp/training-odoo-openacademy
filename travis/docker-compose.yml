@@ -1,0 +1,34 @@
+# docker-compose file used by travis
+# docker-compose.override.yml is automatically used by docker-compose when no
+# option -f is provided
+
+version: '2'
+services:
+  odoo:
+    build: ../odoo/
+    depends_on:
+      - db
+    volumes:
+      - "data-odoo:/data/odoo"
+      - "$HOME/.cachedb:/.cachedb"
+    environment:
+      DB_USER: odoo
+      DB_PASSWORD: odoo
+      DB_NAME: odoodb
+      ADMIN_PASSWD: admin
+      RUNNING_ENV: dev
+      ODOO_CLOUD_PLATFORM_UNSAFE: 1
+      CI: 'True'
+
+  db:
+    image: camptocamp/postgres:9.5
+    command: -c shared_buffers=256MB -c maintenance_work_mem=256MB -c wal_buffers=8MB -c effective_cache_size=1024MB
+    environment:
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    volumes:
+      - "data-db:/var/lib/postgresql/data"
+
+volumes:
+  data-odoo:
+  data-db:

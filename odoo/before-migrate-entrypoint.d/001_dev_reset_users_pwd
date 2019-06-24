@@ -1,0 +1,43 @@
+#!/bin/bash
+# This file has been generated with 'invoke project.sync'.
+# Do not modify. Any manual change will be lost.
+# Please propose your modification on
+# https://github.com/camptocamp/odoo-template instead.
+#
+#
+# Often in development mode, we retrieve a database from a production server
+# and each users have their own password.
+# Here we force all of them equal to usernames.
+#
+# The reset is only done once per database.
+#
+# Resetting the password means a new encrypted hash is generated for the password,
+# and Odoo would invalidate the session, meaning we have to login at each container
+# restart. It inserts a parameter in ir_config_parameter to keep track that passwords
+# were reset.
+
+if [ "$RUNNING_ENV" = "dev" ] ; then
+
+    if [ "$( psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" )" != '1' ]
+    then
+        echo "Database does not exist, ignoring script"
+        exit 0
+    fi
+
+    echo "Setting users' passwords to their usernames."
+
+    psql << EOF
+
+    UPDATE res_users SET password = login
+    FROM (SELECT count(key) as done
+          FROM ir_config_parameter
+          WHERE key = 'dev.password.reset') params
+    WHERE params.done = 0;
+
+    INSERT INTO ir_config_parameter (key, value, create_uid, write_uid, create_date, write_date)
+    VALUES ('dev.password.reset', 1, 1, 1, now(), now())
+    ON CONFLICT DO NOTHING;
+
+EOF
+
+fi

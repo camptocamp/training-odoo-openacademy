@@ -1,0 +1,8 @@
+version: '2'
+services:
+
+  odoo:
+    lb_config:
+      port_rules:
+        - target_port: 80
+          hostname: ${DOMAIN_NAME}

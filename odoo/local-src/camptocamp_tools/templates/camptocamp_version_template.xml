@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file has been generated with 'invoke project.sync'.
+Do not modify. Any manual change will be lost.
+Please propose your modification on
+https://github.com/camptocamp/odoo-template instead.
+-->
+<odoo>
+    <!--This is a simplified copy of web.login_layout because we want to make
+    this reliable cross-version as there are too many modules overriding base
+    web layouts -->
+    <template id="basic_logo_layout" name="Basic logo Layout">
+        <t t-call="web.layout">
+            <t t-set="html_data" t-value="{'style': 'height: 100%;'}"/>
+            <t t-set="head">
+                <t t-call-assets="web.assets_common" t-js="false"/>
+                <t t-call-assets="web.assets_common" t-css="false"/>
+                <t t-call-assets="web.assets_frontend" t-js="false"/>
+                <t t-call-assets="web.assets_frontend" t-css="false"/>
+            </t>
+            <t t-set="body_classname" t-value="'container'"/>
+
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3">
+                    <div class="text-center">
+                        <img t-attf-src="/web/binary/company_logo{{ '?dbname='+db if db else '' }}"/>
+                    </div>
+                    <t t-raw="0"/>
+                </div>
+            </div>
+        </t>
+    </template>
+    <template id="camptocamp_versions_template" name="Camptocamp Versions Template">
+        <t t-call="camptocamp_tools.basic_logo_layout">
+            <div id="wrap">
+                <div class="container">
+                    <h1 class="text-center">Camptocamp Versions</h1>
+                    <t t-foreach="versions" t-as="v">
+                        <div class="row" t-att-style="'background-color:mediumseagreen;' if v_first else None">
+                            <div class="col-md-6">
+                                <p><strong>Version:</strong> <span t-esc="v.get('number')" /></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Deployed:</strong> <span t-esc="v.get('date_done')" t-options='{"widget": "date", "format": "YYYY-MM-dd"}'/></p>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>

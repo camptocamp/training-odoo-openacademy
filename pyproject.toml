@@ -1,0 +1,17 @@
+[tool.black]
+line-length = 79
+skip-string-normalization = 'True'
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | odoo/src
+    | odoo/external-src
+    | odoo/data
+)/
+| /__openerp__.py
+| /__manifest__.py
+'''

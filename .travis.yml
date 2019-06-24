@@ -1,0 +1,91 @@
+sudo: required
+
+services: docker
+
+language: python
+
+python:
+  - "3.6"   # required for black
+
+git:
+  # we don't want travis to pull them for the lint build,
+  # so we pull them manually in the tests build
+  submodules: false
+
+addons:
+  apt:
+    packages:
+      # install pip2 to get some tools like flake8, gitpython, etc
+      # as we are running with python 3.6 by default
+      - python-pip
+      # used for pylint
+      - python-lxml
+
+cache:
+  directories:
+    - $HOME/.cachedb
+
+env:
+  matrix:
+    - LINT_CHECK="1"
+    - TESTS="1"
+  global:
+    - DOCKER_COMPOSE_VERSION="1.17.1"
+    - TESTS="0" LINT_CHECK="0"
+    - ADDONS_DIR="${TRAVIS_BUILD_DIR}/odoo/local-src"
+    - SONGS_DIR="${TRAVIS_BUILD_DIR}/odoo/songs"
+    - TASKS_DIR="${TRAVIS_BUILD_DIR}/tasks"
+    - COMPOSE_PROJECT_NAME=demo
+    - GENERATED_IMAGE="${COMPOSE_PROJECT_NAME}_odoo"
+    - DOCKER_HUB_REPO="camptocamp/${GENERATED_IMAGE}"
+    - TRAVIS_COMPOSE="travis/docker-compose.yml"
+
+before_install:
+  - git config --global user.name "TravisCI"
+  - git config --global user.email "travis@camptocamp.com"
+  # Generate a md5 from submodules to identify the dump.
+  # We will generate a new dump each time any submodule changes
+  - if [ "$TESTS" == "1" ] ; then export SUBS_MD5=$(git submodule status | md5sum | cut -d ' ' -f1) ; fi
+  # Only create cached dump on commits on master and not on tags.
+  # Database dumps will land on the master's cache only.
+  - if [ "$TESTS" == "1" -a "$TRAVIS_PULL_REQUEST" == "false" -a -z "$TRAVIS_TAG" ] ; then export CREATE_DB_CACHE="true" ; fi
+  - if [ "$LINT_CHECK" == "1" ] ; then pip3 install -q pre-commit ; fi
+  - if [ "$LINT_CHECK" == "0" ] ; then pip3 install -q gitpython requests pyOpenSSL ndg-httpsclient pyasn1 pyyaml; fi
+
+install:
+  - if [ "$LINT_CHECK" == "0" ] ; then python3 ./travis/git_submodule_update.py ; fi
+    # we always specify '-f docker-compose.yml' so 'docker-compose.override.yml'
+    # is not used and so the volumes are not shared with the host
+  - if [ "$LINT_CHECK" == "0" ] ; then docker-compose -f $TRAVIS_COMPOSE build --pull ; fi
+  - if [ "$TESTS" == "1" ] ; then docker-compose -f $TRAVIS_COMPOSE up -d db ; fi
+  - if [ "$TESTS" == "1" ] ; then docker-compose -f $TRAVIS_COMPOSE ps ; fi
+
+# We run the tests and migration in the same build, so we can push the docker image
+# after that we validated it has tests and migration passing
+script:
+  - if [ "$LINT_CHECK" == "1" ] ; then pre-commit run --all-files ; fi
+  # run tests on an empty database, which is dropped afterwards
+  - if [ "$TESTS" == "1" ] ; then docker-compose -f $TRAVIS_COMPOSE run --rm -e SUBS_MD5=${SUBS_MD5} -e CREATE_DB_CACHE=${CREATE_DB_CACHE} -e DEMO=True odoo runtests ; fi
+  # run the migration
+  #
+  # Notes on releases:
+  #
+  # On each release both upgrade step and install from scratch are tested
+  # on separate builds.  (even if cache exists)
+  #
+  # When creating a release a git tag will generate 2 builds on travis:
+  # - one for the new tag
+  # - a second for the commit on master.
+  #
+  # As the tag build is used to generate a new release we want to end it fast
+  # to ship it quickly. Thus as odoo/VERSION has changed it needs to check for
+  # previous tag cached database. MIG_LOAD_VERSION_CEIL is there for that.
+  #
+  # However, to ensure a build from scratch is done on each new release
+  # the search of a previous version dump is not active on commits on master.
+  # This will force a complete build when odoo/VERSION has been edited and doesn't
+  # match a cached database dump because such dump has not been created yet.
+  - if [ "$TESTS" == "1" ] ; then docker-compose -f $TRAVIS_COMPOSE run --rm -e MARABUNTA_MODE=sample -e MARABUNTA_ALLOW_SERIE=True -e CREATE_DB_CACHE=${CREATE_DB_CACHE} -e MIG_LOAD_VERSION_CEIL=${TRAVIS_TAG} odoo runmigration ; fi
+
+after_success:
+  - if [ "$TESTS" == "1" ] ; then ./travis/publish.sh ; fi

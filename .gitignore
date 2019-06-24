@@ -1,0 +1,18 @@
+# Byte-compiled / optimized / DLL files
+*/__pycache__/*
+*.py[cod]
+
+# Translations
+*.mo
+
+# backup files
+*.~*
+
+# project specific
+rancher/*/rancher.env
+
+# local dev requirements
+odoo/dev_requirements.txt
+
+# local dev composition
+docker-compose.override.yml

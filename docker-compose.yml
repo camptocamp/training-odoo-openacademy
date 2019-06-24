@@ -1,0 +1,83 @@
+# Root file for the dev composition.
+#
+# This contains the common configuration for all developers
+#
+# You can create a 'docker-compose.override.yml' to customize it according
+# to your needs it will automatically be applied on top of this
+# file when the option '-f' of docker-compose is not used
+
+version: '2'
+services:
+  odoo:
+    build: ./odoo/
+    # Enable if you use oca/connector:
+    # command: "odoo.py --load=web,connector"
+    depends_on:
+      - db
+    tty: true
+    stdin_open: true
+    ports:
+      - 8069
+      - 8072
+    volumes:
+      - "data-odoo:/data/odoo"
+      - "data-odoo-db-cache:/.cachedb"
+      - "data-odoo-pytest-cache:/odoo/.cache"
+      - "./odoo/src:/odoo/src"
+      - "./odoo/local-src:/odoo/local-src"
+      - "./odoo/external-src:/odoo/external-src"
+      - "./odoo/songs:/odoo/songs"
+      - "./odoo/migration.yml:/odoo/migration.yml"
+      - "./odoo/data:/odoo/data"
+    environment:
+      DB_USER: odoo
+      DB_PASSWORD: odoo
+      DB_NAME: odoodb
+      ADMIN_PASSWD: admin
+      RUNNING_ENV: dev
+      # Enable if you use oca/connector:
+      # ODOO_CONNECTOR_CHANNELS: root:4
+      MARABUNTA_MODE: sample  # could be 'full' for the db with all the data
+      MARABUNTA_ALLOW_SERIE: 'True'  # should not be set in production
+  db:
+    image: camptocamp/postgres:9.5
+    command: -c shared_buffers=256MB -c maintenance_work_mem=256MB -c wal_buffers=8MB -c effective_cache_size=1024MB
+    ports:
+      - 5432
+    environment:
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+    volumes:
+      - "data-db:/var/lib/postgresql/data"
+
+  nginx:
+    image: camptocamp/odoo-nginx:12.0-1.5.0
+    depends_on:
+      - odoo
+    ports:
+      - 80:80
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - 8025:8025
+
+## If you need a CUPS server for `base_report_to_printer`
+## See `cups-test-server/README.md`.
+  # cups-server:
+  #   build: ./cups-test-server/
+  #   ports:
+  #     - "6631:631"
+  #   expose:
+  #     - 631
+  #   volumes:
+  #     - "/tmp/cups-pdf:/var/spool/cups-pdf:rw"
+  #   environment:
+  #     CUPS_USER_ADMIN: admin
+  #     CUPS_USER_PASSWORD: secr3t
+
+volumes:
+  data-odoo:
+  data-db:
+  data-odoo-db-cache:
+  data-odoo-pytest-cache:

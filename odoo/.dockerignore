@@ -1,0 +1,10 @@
+**/.git/**/*
+**/.git
+**/.gitignore
+**/.travis.yml
+**/LICENSE
+**/*.pyc
+**/README.md
+**/i18n/*.po
+# installable lang
+!**/i18n/fr.po

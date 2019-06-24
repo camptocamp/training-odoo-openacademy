@@ -1,82 +1,33 @@
-# Odoo Demos
+[![Build Status](https://travis-ci.com/camptocamp/demo_odoo.svg?token=3A3ZhwttEcmdqp7JzQb7&branch=master)](https://travis-ci.com/camptocamp/demo_odoo)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-This repository contains Odoo Demos. They are built using our project template and can be deployed to minions
-Each branch is a different demo. 
+# demo Odoo
 
-## Create a new demo
+**Our internal id for this project is: 0000.**
 
-1. Create a new branch
+This project uses Docker.
+Travis builds a new image for each change on the branches and for each new tag.
 
-Branch naming: <version>-<description>. Example: 9.0-ddmrp
+The images built on the master branch are built as `camptocamp/demo_odoo:latest`.
+The images built on other branches are built as `camptocamp/demo_odoo:<branch-name>`.
+The ones built from tags are built as `camptocamp/demo_odoo:<tag-name>`.
 
-2. Remove the README and generate a project from the template (https://github.com/camptocamp/odoo-template)
+Images are pushed on the registry only when Travis has a green build.
 
-```
-rm README.md
-cookiecutter git@github.com:camptocamp/odoo-template.git
-```
+When a container starts, the database is automatically created and the
+migration scripts automatically run.
 
-Answer to the following questions:
+## Project maintenance
 
-```
-You've cloned /home/gbaconnier/.cookiecutters/odoo-template before. Is it okay to delete and re-clone it? [yes]: yes
-customer_name [Customer]: demo
-Select odoo_version:
-1 - 9.0
-2 - 10.0
-3 - 11.0
-Choose from 1, 2, 3 [1]: 3  # (pick the one you want)
-customer_shortname [demo]: demo
-repo_name [demo]: generated
-project_name [demo_odoo]: demo_odoo
-project_id [0000]:
-odoo_company_name [demo]:
-Select platform_name:
-1 - none
-2 - fr
-3 - ch
-Choose from 1, 2, 3 [1]: 1
-```
+Please keep this project up-to-date by:
 
-3. Move the generated template to the root folder, and commit
+* ensure the `FROM` image in `odoo/Dockerfile` is the latest release
+* run regularly `invoke project.sync` to retrieve the last template's changes
 
-```
-mv generated/{.,}* .
-rm -rf generated
-git add .
-git commit -m"generated demo from template"
-```
+## Links
 
-4. Change the password for the admin user, in `odoo/songs/install/pre.py` (**please copy paste the one below** so they all have the same password in lastpass "Shared-C2C-Odoo-External\demo_odoo\[odoo-test] demo test admin user (minions)"):
-
-```
-@anthem.log
-def admin_user_password(ctx):
-    """ Changing admin password """
-    # ... snip ...
-    if os.environ.get('RUNNING_ENV') == 'dev':
-        ctx.log_line('Not changing password for dev RUNNING_ENV')
-        return
-    # Change the assignment by this one:
-    # the corresponding entry in lastpass already exists as:
-    # Shared-C2C-Odoo-External\demo_odoo\[odoo-test] demo test admin user (minions)
-    ctx.env.user.password_crypt = (
-        '$pbkdf2-sha512$12000$VIqR0nrvfe.dc855r9Wa0w$EWEE/QrBE8U3xTn5cgRs9'
-        'w/srmpuVcn7Jude0j/bnNizbj1mOgvM9gpd4sD37WkNWKwDq7KQhMOrCpRlBcjvUw'
-    )
-```
-
-5. You might want to activate the Odoo's demo data, to do so, add:
-
-In docker-compose.yml in the root directory:
-
-```
-  odoo:
-    environment:
-    - DEMO=True
-```
-
-In travis/minion-files/rancher.list, set `DEMO` to `True`.
-
-
-6. Customize the demo. Minions should be created automatically on https://demo.odoo-test.camptocamp.ch
+* [General documentation](./docs/README.md)
+* [Local documentation](./docs/README.local.md)
+* [Changelog](HISTORY.rst).
+* [Minions](https://demo.odoo-test.camptocamp.ch)
+* [Base image documentation](https://github.com/camptocamp/docker-odoo-project)

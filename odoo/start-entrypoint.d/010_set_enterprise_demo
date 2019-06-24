@@ -1,0 +1,45 @@
+#!/bin/bash
+# This file has been generated with 'invoke project.sync'.
+# Do not modify. Any manual change will be lost.
+# Please propose your modification on
+# https://github.com/camptocamp/odoo-template instead.
+
+#
+# Often in development mode, we retrieve a database from a production server
+# with a enterprise subscription. This script automatically changes
+# the config parameters to set enterprise subscription in demo mode
+# when working in dev.
+#
+
+keep_enterprise_subscription=$(echo "${ODOO_KEEP_ENTERPRISE_SUBSCRIPTION}" | tr '[:upper:]' '[:lower:]' )
+
+if [ "$keep_enterprise_subscription" = "true" ]; then
+  exit 0
+fi
+
+if [ "$RUNNING_ENV" = "dev" ] || [ "$RUNNING_ENV" = "test" ] || [ "$RUNNING_ENV" = "integration" ] ; then
+    if [ "$( psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" )" != '1' ]
+    then
+        echo "Database does not exist, ignoring script"
+        exit 0
+    fi
+
+    echo "Setting enterprise subscription in demo mode"
+
+    psql << EOF
+
+    DELETE FROM ir_config_parameter
+    WHERE key = 'database.enterprise_code';
+
+    UPDATE ir_config_parameter
+    SET value = 'demo'
+    WHERE key = 'database.expiration_reason'
+    AND value != 'demo';
+
+    UPDATE ir_config_parameter
+    SET value = CURRENT_DATE + INTERVAL '2 month'
+    WHERE key = 'database.expiration_date';
+
+EOF
+
+fi

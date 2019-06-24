@@ -1,0 +1,46 @@
+#!/bin/bash
+# This file has been generated with 'invoke project.sync'.
+# Do not modify. Any manual change will be lost.
+# Please propose your modification on
+# https://github.com/camptocamp/odoo-template instead.
+# This file has been generated with 'invoke project.sync'.
+# Do not modify. Any manual change will be lost.
+# Please propose your modification on
+# https://github.com/camptocamp/odoo-template instead.
+
+
+# Marabunta now supports 5 digits versions and the 1st initial version must be "setup"
+
+if [ "$( psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" )" != '1' ]
+then
+    echo "Database does not exist, ignoring script"
+    exit 0
+fi
+
+echo "Checking 1st marabunta version."
+
+if [ "$( psql -tAc "SELECT 1 FROM marabunta_version WHERE number='setup'" )" != '1' ] &&
+   [ "$( psql -tAc "SELECT 1 WHERE NOT EXISTS ( SELECT number FROM marabunta_version );" )" != '1' ]
+then
+
+    echo "Setting 1st marabunta version to 'setup'"
+
+    # inject "setup" version before the 1st one
+    psql << EOF
+
+    INSERT INTO marabunta_version (
+        number,
+        date_start,
+        date_done,
+        log
+    )
+    VALUES (
+        'setup',
+        current_timestamp,
+        current_timestamp,
+        'INSERTED by before-migrate-entrypoint.d/901_migrate_marabunta_version'
+    )
+
+EOF
+
+fi

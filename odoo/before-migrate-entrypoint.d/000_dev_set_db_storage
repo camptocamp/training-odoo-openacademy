@@ -1,0 +1,61 @@
+#!/bin/bash
+# This file has been generated with 'invoke project.sync'.
+# Do not modify. Any manual change will be lost.
+# Please propose your modification on
+# https://github.com/camptocamp/odoo-template instead.
+#
+# Often in development mode, we retrieve a database from a production server
+# using 'attachment_s3' (cloud platform). This script automatically changes
+# the attachments to be stored in the database because there is no S3 bucket
+# when working in dev.
+#
+# When one needs to work on S3 with a development instance, he might set the
+# ODOO_DEV_KEEP_ATTACHMENT_S3=true environment variable
+#
+keep_location=$(echo "${ODOO_DEV_KEEP_ATTACHMENT_S3}" | tr '[:upper:]' '[:lower:]' )
+
+if [ "$keep_location" = "true" ]; then
+    exit 0
+fi
+
+if [ "$RUNNING_ENV" = "dev" ] ; then
+
+    if [ "$( psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" )" != '1' ]
+    then
+        echo "Database does not exist, ignoring script"
+        exit 0
+    fi
+
+
+    echo "Deleting web attachment when ir_attachment.location parameter is 's3' or 'swift'"
+
+    psql << EOF
+
+    DELETE FROM ir_attachment
+    WHERE url like '/web/content/%'
+    AND EXISTS (
+        SELECT value
+        FROM ir_config_parameter
+        WHERE key = 'ir_attachment.location'
+        AND value in ('s3', 'swift')
+    );
+
+EOF
+
+    echo "Setting ir_attachment.location parameter to 'db' if the current is 's3' or 'swift'"
+
+    psql << EOF
+
+    UPDATE ir_config_parameter
+    SET value = 'db'
+    WHERE key = 'ir_attachment.location'
+    AND EXISTS (
+        SELECT value
+        FROM ir_config_parameter
+        WHERE key = 'ir_attachment.location'
+        AND value in ('s3', 'swift')
+    );
+
+EOF
+
+fi
