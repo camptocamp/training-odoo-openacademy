@@ -10,8 +10,8 @@ migration:
           ## Choose between the two options : ovh or exoscale
           #- anthem openerp.addons.cloud_platform.songs::install_exoscale
           #- anthem openerp.addons.cloud_platform.songs::install_ovh
-          - anthem songs.install.accounting::main
-          - anthem songs.install.logistics::main
+          #- anthem songs.install.accounting::main
+          #- anthem songs.install.logistics::main
           - anthem songs.install.data_all::main
       modes:
         full:
@@ -40,7 +40,7 @@ migration:
           #### oca/web
           - web_environment_ribbon
           #### camptocamp/odoo-dj
-          - base_dj
+          # - base_dj
           #### local-src
           # - my_addon
     # update step example

@@ -2,7 +2,7 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html)
 
 import os
-from base64 import b64encode
+# from base64 import b64encode
 
 import anthem
 
@@ -15,12 +15,12 @@ ALL_LANG = [MAIN_LANG] + (OPT_LANG.split(';') if OPT_LANG else [])
 def setup_company(ctx):
     """ Setup company """
     # load logo on company
-    logo_path = os.path.join(
-        ctx.options.odoo_data_path, 'images/company_main_logo.png'
-    )
-    with open(logo_path, 'rb') as logo_file:
-        logo_content = logo_file.read()
-    b64_logo = b64encode(logo_content)
+    # logo_path = os.path.join(
+    #     ctx.options.odoo_data_path, 'images/company_main_logo.png'
+    # )
+    # with open(logo_path, 'rb') as logo_file:
+    #     logo_content = logo_file.read()
+    # b64_logo = b64encode(logo_content)
 
     values = {
         'name': "demo",
@@ -33,7 +33,7 @@ def setup_company(ctx):
         'email': "contact@demo.ch",
         'website': "http://www.demo.ch",
         'vat': "VAT",
-        'logo': b64_logo,
+        # 'logo': b64_logo,
         'currency_id': ctx.env.ref('base.CHF').id,
     }
     ctx.env.ref('base.main_company').write(values)

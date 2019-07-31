@@ -1,18 +1,16 @@
-[![Build Status](https://travis-ci.com/camptocamp/demo_odoo.svg?token=3A3ZhwttEcmdqp7JzQb7&branch=master)](https://travis-ci.com/camptocamp/demo_odoo)
+[![Build Status](https://travis-ci.com/camptocamp/demo_odoo.svg?token=3A3ZhwttEcmdqp7JzQb7&branch=12.0-training)](https://travis-ci.com/camptocamp/demo_odoo)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
 # demo Odoo
 
-**Our internal id for this project is: 0000.**
-
 This project uses Docker.
-Travis builds a new image for each change on the branches and for each new tag.
 
-The images built on the master branch are built as `camptocamp/demo_odoo:latest`.
-The images built on other branches are built as `camptocamp/demo_odoo:<branch-name>`.
-The ones built from tags are built as `camptocamp/demo_odoo:<tag-name>`.
+To get a working instance, initialize the required submodules:
 
-Images are pushed on the registry only when Travis has a green build.
+  $ git submodule add -b 12.0 git@github.com:OCA/OCB.git ./odoo/src
+  $ git submodule add -b 12.0 git@github.com:OCA/server-env.git ./odoo/external-src/server-env
+  $ git submodule add -b 12.0 git@github.com:OCA/server-ux.git ./odoo/external-src/server-ux
+  $ git submodule add -b 12.0 git@github.com:OCA/web.git ./odoo/external-src/web
 
 When a container starts, the database is automatically created and the
 migration scripts automatically run.

@@ -10,8 +10,6 @@ version: '2'
 services:
   odoo:
     build: ./odoo/
-    # Enable if you use oca/connector:
-    # command: "odoo.py --load=web,connector"
     depends_on:
       - db
     tty: true
@@ -35,8 +33,9 @@ services:
       DB_NAME: odoodb
       ADMIN_PASSWD: admin
       RUNNING_ENV: dev
-      # Enable if you use oca/connector:
+      # Enable if you use oca/queue_job:
       # ODOO_CONNECTOR_CHANNELS: root:4
+      # SERVER_WIDE_MODULES: web,queue_job
       MARABUNTA_MODE: sample  # could be 'full' for the db with all the data
       MARABUNTA_ALLOW_SERIE: 'True'  # should not be set in production
   db:
