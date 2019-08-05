@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<openerp>
-<data>
+<odoo>
+
   <record model="res.partner.category" id="teacher1">
     <field name="name">Formateur / Niveau 1</field>
   </record>
   <record model="res.partner.category" id="teacher2">
     <field name="name">Formateur / Niveau 2</field>
   </record>
-</data>
-</openerp>
+
+</odoo>

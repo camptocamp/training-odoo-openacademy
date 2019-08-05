@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from openerp import models, fields, api, exceptions, _
+from odoo import _, api, exceptions, fields, models
 
 
 class Session(models.Model):
@@ -15,14 +14,16 @@ class Session(models.Model):
         domain=['|', ('instructor', '=', True),
                      ('category_id.name', 'ilike', "Formateur")],
     )
-    course_id = fields.Many2one(comodel_name='openacademy.course',
-                                ondelete='cascade',
-                                string='Course',
-                                required=True)
-    attendee_ids = fields.Many2many(comodel_name='res.partner',
-                                    string="Attendees")
-    taken_seats = fields.Float(string="Taken seats",
-                               compute='_compute_taken_seats')
+    course_id = fields.Many2one(
+        comodel_name='openacademy.course',
+        ondelete='cascade',
+        string='Course',
+        required=True,
+    )
+    attendee_ids = fields.Many2many(
+        comodel_name='res.partner', string="Attendees")
+    taken_seats = fields.Float(
+        string="Taken seats", compute='_compute_taken_seats')
     active = fields.Boolean(default=True)
     state = fields.Selection(
         selection='_selection_state',

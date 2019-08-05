@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from openerp import models, fields, api, _
+from odoo import _, api, fields, models
 
 
 class Course(models.Model):
@@ -7,12 +6,17 @@ class Course(models.Model):
 
     name = fields.Char(string='Title', required=True)
     description = fields.Text()
-    responsible_id = fields.Many2one(comodel_name='res.users',
-                                     ondelete='set null',
-                                     string='Responsible',
-                                     index=True)
-    session_ids = fields.One2many(comodel_name='openacademy.session',
-                                  inverse_name='course_id', string="Sessions")
+    responsible_id = fields.Many2one(
+        comodel_name='res.users',
+        ondelete='set null',
+        string='Responsible',
+        index=True,
+    )
+    session_ids = fields.One2many(
+        comodel_name='openacademy.session',
+        inverse_name='course_id',
+        string="Sessions",
+    )
 
     _sql_constraints = [
         ('name_description_check',
@@ -36,4 +40,4 @@ class Course(models.Model):
             new_name = _(u"Copy of {} ({})").format(self.name, copied_count)
 
         default['name'] = new_name
-        return super(Course, self).copy(default)
+        return super().copy(default)

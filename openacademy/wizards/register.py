@@ -1,4 +1,4 @@
-from openerp import models, fields, api
+from odoo import api, fields, models
 
 
 class Register(models.TransientModel):
