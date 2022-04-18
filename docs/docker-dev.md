@@ -21,35 +21,15 @@ image](https://github.com/camptocamp/docker-odoo-project).
 
 2. Submodules
 
-    You have two options:
-
-    1. Clone the submodules from scratch
+    To get submodule use:
 
     ```bash
-    git submodule update --init
+    invoke submodule.update
     ```
 
-    If you have an error because a ref cannot be found, it is probably that the
-    remote has changes, you just need to run the following command that will update
-    the remote:
+    This will sync the submodules and get them one by one.
 
-    ```bash
-    git submodule sync
-    ```
-
-    2. Use existing cloned repositories
-
-    The Odoo repo `odoo/src` will take quite some time if pulled from scratch.
-    If you already have a local checkout of one or more submodules
-    you can save a lot of time avoiding to download the whole repos, by doing this:
-
-    ```
-    cp -r path/to/odoo odoo/src
-    cp -r path/to/server-tools odoo/external-src/
-    git submodule update --init
-    ```
-    Be aware that path/to/odoo (or path/to/server-tools) has to be a local clone
-    of a repository, because it won't work if you copy a submodule from another project.
+    Tip: Install [Git-autoshare](how-to-setup-git-autoshare.md#Installation) to copy from local host instead to reduce download.
 
 ## Docker
 
@@ -63,7 +43,7 @@ environment we share the local (source code) folders with the container using
 Building the image is required when:
 
 * you start to work on the project
-* the base image (`camptocamp/odoo-project:12.0`) has been updated and you need
+* the base image (`camptocamp/odoo-project:14.0`) has been updated and you need
   the new version
 * the local Dockerfile has been modified (for example when dependency or addons
   repository is added)

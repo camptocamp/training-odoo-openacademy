@@ -5,7 +5,7 @@
 version: '2'
 services:
   odoo:
-    image: camptocamp/demo_odoo:latest
+    image: ghcr.io/camptocamp/demo_odoo:latest
     depends_on:
       - db
     volumes:
@@ -20,7 +20,7 @@ services:
       - MARABUNTA_ALLOW_SERIE=True  # should not be set in production
 
   db:
-    image: camptocamp/postgres:9.5
+    image: ghcr.io/camptocamp/postgres:12-postgis3
     command: -c shared_buffers=256MB -c maintenance_work_mem=256MB -c wal_buffers=8MB -c effective_cache_size=1024MB
     ports:
       - 5432
@@ -31,7 +31,7 @@ services:
       - "data-db:/var/lib/postgresql/data"
 
   nginx:
-    image: camptocamp/odoo-nginx:11.0-1.5.0
+    image: camptocamp/odoo-nginx:14.0-1.7.0
     depends_on:
       - odoo
     ports:

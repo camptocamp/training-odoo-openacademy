@@ -6,13 +6,31 @@ https://github.com/camptocamp/odoo-template instead.
 -->
 # How to add a new addons repository
 
+You have two options:  
+* Use invoke task
+* "Manual" with git
+
+## Use invoke task
+
+- [ ] modify the `.gitmodules` and add your extenal repository like
+```
+[submodule "odoo/external-src/submodule"]
+  path = odoo/external-src/submodule
+  url = git@github.com:camptocamp/submodule.git
+  branch = 14.0
+```
+- [ ] `invoke submodule.init && invoke submodule.update` to add the submodule
+- [ ] Add in the [Dockerfile](../odoo/Dockerfile) the new `ADDONS_PATH` with yours
+
+## "Manual" with git
+
 External addons repositories such as the OCA ones are integrated in
 the project using git submodules.
 
 To add a new one, you only have to add the submodule:
 
 ```
-git submodule add -b 12.0 git@github.com:OCA/sale-workflow.git odoo/external-src/sale-workflow
+git submodule add -b 14.0 git@github.com:OCA/sale-workflow.git odoo/external-src/sale-workflow
 git add odoo/external-src/sale-workflow
 ```
 
@@ -68,7 +86,7 @@ that the folder has been added directly to the main git repository instead of a 
   [submodule "odoo/external-src/submodule"]
   	path = odoo/external-src/submodule
   	url = git@github.com:camptocamp/submodule.git
-  	branch = 12.0
+  	branch = 14.0
   ```
 
 * Stage the .gitmodules changes via command line using: `git add .gitmodules`
@@ -95,3 +113,24 @@ that the folder has been added directly to the main git repository instead of a 
 * Commit the changes
 
 * Delete the now untracked submodule files `rm -rf odoo/external-src/submodule`
+
+# How update to one version all submodules
+
+* Use this script after change the XX.0 version number
+
+```shell
+for i in $(ls odoo/external-src); do
+    echo $i;
+    if [[ -d odoo/external-src/$i ]]; then
+        cd odoo/external-src/$i;
+        git fetch;
+        git checkout XX.0;
+        git pull;
+        cd ../../../;
+    else
+        echo "$i not a directory"
+    fi
+done
+```
+
+* Update the modules with pending merge with this [submodule-merges tips](invoke.md#submodulemerges)

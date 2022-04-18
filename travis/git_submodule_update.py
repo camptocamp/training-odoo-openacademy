@@ -4,7 +4,7 @@
 # Do not modify. Any manual change will be lost.
 # Please propose your modification on
 # https://github.com/camptocamp/odoo-template instead.
-# Download submodules from Github zip archive url
+# Download submodules from Github archive url
 # Keep standard update form private repositories
 # listed in `travis/private_repo`
 #
@@ -12,7 +12,7 @@ from __future__ import print_function
 
 import os
 import shutil
-import zipfile
+import tarfile
 
 import yaml
 from git import Repo
@@ -28,7 +28,7 @@ except ImportError:
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(SCRIPT_DIR, os.pardir))
 DL_DIR = 'download'
-ZIP_PATH = '%s/submodule.zip' % DL_DIR
+ARCHIVE_PATH = '%s/submodule.tar.gz' % DL_DIR
 
 
 def git_url(url):
@@ -88,31 +88,34 @@ def download_submodules(submodules, private_repos):
         use_archive = sub.path not in private_repos
         if use_archive:
             url = git_url(sub.url)
-            archive_url = "{}/archive/{}.zip".format(url, sub.hexsha)
+            filename = "{}.tar.gz".format(sub.hexsha)
+            archive_url = "{}/archive/{}".format(url, filename)
             request = requestlib.Request(archive_url)
-            with open(ZIP_PATH, 'wb') as f:
+            with open(ARCHIVE_PATH, 'wb') as f:
                 f.write(requestlib.urlopen(request).read())
             try:
-                with zipfile.ZipFile(ZIP_PATH) as zf:
-                    zf.extractall(DL_DIR)
-            except zipfile.BadZipfile:
+                with tarfile.open(ARCHIVE_PATH, "r:gz") as tf:
+                    tf.extractall(DL_DIR)
+            except tarfile.ExtractError:
                 # fall back to standard download
                 use_archive = False
-                with open(ZIP_PATH) as f:
+                with open(ARCHIVE_PATH) as f:
                     print(
                         "Getting archive failed with error %s. "
                         "Falling back to git clone." % f.read()
                     )
-                os.remove(ZIP_PATH)
+                os.remove(ARCHIVE_PATH)
             except Exception as e:
                 use_archive = False
                 print(
                     "Getting archive failed with error %s. "
-                    "Falling back to git clone." % e.message
+                    "Falling back to git clone." % str(e)
                 )
             else:
-                os.remove(ZIP_PATH)
-                os.removedirs(sub.path)
+                if os.path.exists(ARCHIVE_PATH):
+                    os.remove(ARCHIVE_PATH)
+                if os.path.exists(sub.path):
+                    os.removedirs(sub.path)
                 submodule_dir = os.listdir(DL_DIR)[0]
                 shutil.move(os.path.join(DL_DIR, submodule_dir), sub.path)
         if not use_archive:

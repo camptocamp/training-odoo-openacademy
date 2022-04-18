@@ -1,0 +1,16 @@
+account_bank_statement
+account_invoice
+account_invoice_line
+account_move
+account_move_line
+account_payment_order
+ir_attachment
+mail_message
+payment_order
+procurement_order
+purchase_order
+purchase_order_line
+sale_order
+sale_order_line
+stock_move
+stock_picking

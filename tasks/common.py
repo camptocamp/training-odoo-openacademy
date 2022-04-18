@@ -14,6 +14,7 @@ import shutil
 import tempfile
 from builtins import input
 from contextlib import contextmanager
+from subprocess import Popen
 
 import yaml
 from invoke import exceptions
@@ -51,20 +52,26 @@ TEMPLATE_GIT_REPO_URL = 'git@github.com:{}.git'
 TEMPLATE_GIT = TEMPLATE_GIT_REPO_URL.format('camptocamp/odoo-template')
 
 
-def gpg_decrypt_to_file(ctx, password, file_name):
+def gpg_decrypt_to_file(ctx, file_name, password=False):
     """Get a value from lastpass.
-    :param password: password to decript gpg file
     :param file_name: File .gpg to decrypt
+    :param password: password to decript gpg file
     """
-    ctx.run(
-        "gpg --yes --passphrase '{}' "
-        "--no-tty --quiet '{}'".format(password, file_name)
-    )
+    passphrase = ""
+    if password:
+        passphrase = "--pinentry-mode loopback --batch --passphrase '{}' --no-tty --quiet".format(
+            password
+        )
+    ctx.run("gpg --yes {} '{}'".format(passphrase, file_name))
+
+
+def yaml_load(stream, Loader=None):
+    return yaml.load(stream, Loader=Loader or yaml.FullLoader)
 
 
 def cookiecutter_context():
     with open(COOKIECUTTER_CONTEXT, 'rU') as f:
-        return yaml.load(f.read())
+        return yaml_load(f.read())
 
 
 def exit_msg(message):
@@ -142,7 +149,7 @@ def update_yml_file(path, new_data, main_key=None):
     yaml.indent(mapping=2, sequence=4, offset=2)
 
     with open(path) as f:
-        data = yaml.load(f.read())
+        data = yaml_load(f.read())
         if main_key:
             data[main_key].update(new_data)
         else:
@@ -180,9 +187,14 @@ def get_from_lastpass(ctx, note_id, get_field):
                       for show command)
     :return: Value of the field for this note
     """
-    return ctx.run(
-        "lpass show {} {}".format(get_field, note_id), hide=True
-    ).stdout.strip()
+    password = False
+    try:
+        password = ctx.run(
+            "lpass show {} {}".format(get_field, note_id), hide=True
+        ).stdout.strip()
+    except Exception as expt:
+        print("Error in get_from_lastpass : {}".format(expt))
+    return password
 
 
 def make_dir(path_dir):
@@ -202,7 +214,7 @@ def get_migration_file_modules(migration_file):
     """Read the migration.yml and get module list.
     """
     with open(migration_file, 'r') as stream:
-        content = yaml.load(stream, Loader=yaml.FullLoader)
+        content = yaml_load(stream)
     modules = set()
     for version in range(len(content['migration']['versions'])):
         try:
@@ -211,3 +223,13 @@ def get_migration_file_modules(migration_file):
         except KeyError:
             pass
     return modules
+
+
+def has_exec(name):
+    try:
+        devnull = open(os.devnull, 'w')
+        Popen([name], stdout=devnull, stderr=devnull).communicate()
+    except OSError as err:
+        if err.errno == os.errno.ENOENT:
+            return False
+    return True

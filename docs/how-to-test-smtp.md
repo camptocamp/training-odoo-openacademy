@@ -27,8 +27,10 @@ Using this commit as reference: https://github.com/guewen/odoo-template/commit/0
 
 In integration and test environment, [mailtrap.io](https://mailtrap.io) is used.
 
-To create a new account for a project, use the email address that can be found on the specific project page (tab "Other Info") of our Odoo instance and a random password.
+To create a new account for a project :
+* use the email address : `project+demo_odoo@camptocamp.com`
+* a random password : may be with `pwgen -s -n1 30`
 
-The confirmation email of mailtrap.io will appear in the tasks of the corresponding project in Odoo.
+The confirmation email of mailtrap.io will appear in the CRM/Pipline/Leads in ours Odoo.
 
-Don't forget to add an entry in lastpass.
+:warning: Don't forget to add an entry in lastpass.

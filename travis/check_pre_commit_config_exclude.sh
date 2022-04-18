@@ -5,8 +5,8 @@
 # https://github.com/camptocamp/odoo-template instead.
 
 # Return the module list excluded into `pre-commit-config.yaml`
-# List is formated like this: odoo/local-src/module/|odoo/local-src/modeule2/
-before=$(head -1 .pre-commit-config.yaml | grep exclude | sed "s/exclude: //g" | xargs)
+# List is formated like this: odoo/local-src/module/|odoo/local-src/module2/
+before=$(head -1 .pre-commit-config.yaml | grep exclude | sed "s/exclude: //g" | sed "s/odoo\/local-src\/setup//g" | xargs)
 
 # Return the specific module list uninstallable
 current=$(for i in $(find odoo/local-src/ -name "__manifest__.py" -print); do egrep -l "installable.+False" $i; done | sort | xargs | sed 's/__manifest__.py /|/g' | sed 's/__manifest__.py//g' | grep . | xargs)

@@ -82,7 +82,7 @@ $ docker-compose run --rm odoo psql -l
 And you can work as you want on any of them by changing the `DB_NAME`.
 
 
-## Backup and restore with dumps
+## Backup
 
 ### Create a local dump using automated invoke task
 
@@ -128,7 +128,7 @@ invoke database.empty-my-dump-bag
 ### Create a dump manually
 
 If you have the same `pg_dump` version on your computer than the one used in the
-db container (9.5 at time of writing), you can just use your local `pg_dump`
+db container (12 at time of writing), you can just use your local `pg_dump`
 directly on the outgoing port of the db container (see [how to find the
 port](how-to-connect-to-docker-psql.md)). Example:
 
@@ -139,15 +139,24 @@ $ pg_dump -h localhost -p 32768 --format=c -U odoo --file db.pg odoodb
 Note : When using `odoo` DB User (role), keep in mind its password is `odoo`
 
 If you have an older version of `postgres-client`, `pg_dump` will refuse to
-make a dump. An option is to update your `postgres-client`.  Here is another option using a  `postgres:9.5` one-off container (the `db` container
+make a dump. An option is to update your `postgres-client`.  Here is another option using a  `postgres:12-postgis3` one-off container (the `db` container
 must be running):
 
 ```bash
 $ export HOST_BACKUPS=/path/of/hosts/backups  # Where you want to save the backups
 $ export PROJECT_NAME=project_name (the prefix of containers, volumes, networks, usually the root folder's name)
 
-$ docker run --rm --net=${PROJECT_NAME}_default --link ${PROJECT_NAME}_db_1:db -e PGPASSWORD=odoo -v $HOST_BACKUPS:/backup postgres:9.5 pg_dump -Uodoo --file /backup/db.pg --format=c odoodb -h db
+$ docker run --rm --net=${PROJECT_NAME}_default --link ${PROJECT_NAME}_db_1:db -e PGPASSWORD=odoo -v $HOST_BACKUPS:/backup postgres:12-postgis3 pg_dump -Uodoo --file /backup/db.pg --format=c odoodb -h db
 ```
+
+## Restore
+
+### Restore from dump bag
+
+```
+invoke database.download-restore-dump $CLOUDPLATFORM_DBNAME --restore-db=prod-20181115
+```
+This will download latest dump from dumpbag and restore it into given database.
 
 ### Restore a dump using container
 
@@ -166,13 +175,12 @@ path of your dump file:
 docker-compose run --rm odoo pg_restore -p 5432 -d my_restored_database < ~/my_dumps/username_projectname_datetime.pg
 ```
 
-
 ### Restore using local command
 
 You should always prefer the method above.
 
 If you have the same `pg_restore` version on your computer than the one used in the
-db container (9.5 at time of writing), you can just use your local `pg_restore`
+db container (12 at time of writing), you can just use your local `pg_restore`
 directly on the outgoing port of the db container (see [how to find the
 port](how-to-connect-to-docker-psql.md)). Example:
 
@@ -182,15 +190,15 @@ $ pg_restore -h localhost -p 32768 -O -U odoo -j2 -d prod
 ```
 
 If you have an older version of `postgres-client`, `pg_restore` will refuse to
-restore the dump. An option is to update your `postgres-client`.  Here is another option using a  `postgres:9.5` one-off container (the `db` container
+restore the dump. An option is to update your `postgres-client`.  Here is another option using a  `postgres:12-postgis3` one-off container (the `db` container
 must be running):
 
 ```bash
 $ export HOST_BACKUPS=/path/of/hosts/backups  # From where you want to restore the backup
 $ export PROJECT_NAME=project_name (the prefix of containers, volumes, networks, usually the root folder's name)
 
-$ docker run --rm --net=${PROJECT_NAME}_default --link ${PROJECT_NAME}_db_1:db -e PGPASSWORD=odoo  postgres:9.5 createdb -h db -O odoo prod
-$ docker run --rm --net=${PROJECT_NAME}_default --link ${PROJECT_NAME}_db_1:db -e PGPASSWORD=odoo -v $HOST_BACKUPS:/backup postgres:9.5 pg_restore -h db -O -U odoo --file /backup/db.pg -j2 -d prod
+$ docker run --rm --net=${PROJECT_NAME}_default --link ${PROJECT_NAME}_db_1:db -e PGPASSWORD=odoo  postgres:12-postgis3 createdb -h db -O odoo prod
+$ docker run --rm --net=${PROJECT_NAME}_default --link ${PROJECT_NAME}_db_1:db -e PGPASSWORD=odoo -v $HOST_BACKUPS:/backup postgres:12-postgis3 pg_restore -h db -O -U odoo --file /backup/db.pg -j2 -d prod
 ```
 
 ## Drop a database
@@ -222,3 +230,23 @@ result from above) and the db name:
 ```
 dropdb -h localhost -p 32768 -U odoo odoodb
 ```
+
+## Move your DB volume to another location
+
+When working with production databases, depending on the customer and its DB
+ size you can run out of space on your HDD partition quite fast, and might prefer
+ using another DB cluster.
+
+For such projects, you can either move your DB cluster to another partition, 
+ an external HDD or even a network resource **(This I'm not sure about)** 
+ quite easily by modifying the volume of your `db` container.
+
+Just map the new location in your `docker-compose.override.yml`:
+
+```yaml
+    volumes:
+      - "/media/user/ElementsHDD/volumes/c2c_odoo/data:/var/lib/postgresql/data"
+```
+
+Then, make sure you stop *and remove* the actual `db` container for your project
+ so that the new volume is used. 

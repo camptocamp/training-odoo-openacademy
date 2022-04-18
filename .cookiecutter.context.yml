@@ -1,10 +1,11 @@
 customer_name: demo
-odoo_version: '12.0'
+odoo_version: '14.0'
 customer_shortname: demo
 repo_name: generated
 project_id: '0000'
 project_name: demo_odoo
 odoo_company_name: demo
+country: ch
 odoo_main_lang: fr_FR
 odoo_aux_langs: None
 platform_name: none

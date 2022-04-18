@@ -36,9 +36,12 @@ github.com:
         orgs:
             - odoo
             - camptocamp
-    ocb:
+            - OCA
+    # OCA
+    account-analytic:
         orgs:
-            - oca
+            - OCA
+            - camptocamp
     enterprise:
         orgs:
             - odoo
@@ -85,5 +88,14 @@ Crontab support such syntax `minute hour day_of_month month day_of_week command`
 example of a job to update repositories every week on monday at 11 a.m.
 
   ```bash
-  0 11 * * 1 git autoshare-prefetch --quiet
+  0 11 * * 1 /home/<user>/.local/bin/git-autoshare-prefetch --quiet
   ```
+
+:warning: Warnings:
+
+The path must be absolute or you need to add `/home/<user>/.local/bin/`
+in your CRON PATH
+
+CRON doesn't load git config. Thus you should add private repositories at the end of
+the `repos.yml` file in order that it will fail only after the cron ran. This allows
+you to still run manually the `git autoshare-prefetch` manually.

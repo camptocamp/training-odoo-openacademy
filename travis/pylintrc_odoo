@@ -27,6 +27,15 @@ persistent=yes
 load-plugins=pylint_odoo
 
 
+[ODOOLINT]
+# readme_template_url="https://github.com/OCA/maintainer-tools/blob/master/template/module/README.rst"
+# manifest_required_authors=Camptocamp
+manifest_required_keys=license
+manifest_deprecated_keys=active
+license_allowed=AGPL-3,GPL-2,GPL-2 or any later version,GPL-3,GPL-3 or any later version,LGPL-3
+valid_odoo_versions=14.0
+
+
 [MESSAGES CONTROL]
 disable=all
 
@@ -35,7 +44,6 @@ enable=anomalous-backslash-in-string,
     dangerous-default-value,
     duplicate-key,
     missing-import-error,
-    missing-manifest-dependency,
     pointless-statement,
     pointless-string-statement,
     print-statement,
@@ -63,12 +71,15 @@ enable=anomalous-backslash-in-string,
     file-not-used,
     missing-manifest-dependency,
     except-pass,
-    copy-wo-api-one,
     missing-return,
     renamed-field-parameter,
     openerp-exception-warning,
     deprecated-openerp-xml-node,
     deprecated-data-xml-node,
+    manifest-version-format,
+    manifest-deprecated-key,
+    manifest-required-key,
+    license-allowed,
 
 
 [REPORTS]

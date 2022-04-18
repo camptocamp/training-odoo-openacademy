@@ -8,3 +8,5 @@
 **/i18n/*.po
 # installable lang
 !**/i18n/fr.po
+!**/i18n/No.po
+!**/i18n/None.po

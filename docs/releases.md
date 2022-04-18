@@ -74,8 +74,6 @@ In the following order, at the end of a sprint, the release manager will:
 When the tag is pushed on GitHub, Travis will build a new Docker image (as
 long as the build is green!) and push it on the registry as `camptocamp/demo_odoo:R.r.x.y.z`
 
-If everything went well it is worth informing the project manager that a new release is ready to be tested on the Minions.
-
 
 ## Patch process
 
@@ -91,13 +89,15 @@ If everything went well it is worth informing the project manager that a new rel
 6. Create a release `R.r.x.y.next-z`
 7. **Merge the branch `patch-R.r.x.y.next-z` in master (very important to have the
    fix for the next release!)**
+   
+   /!\ Always do a "git merge master" into branch `patch-R.r.x.y.next-z` (and not a rebase) to avoid duplicate commits (due to hash commit change when rebase) if we do a second patch release based on the first.
 
 You can refer to the more detailed documentation below.
 
 ### Short story
 
 Example of branches involving Paul as the Release manager and Liza and Greg as
-developers, the current version is `12.0.1.3.2`:
+developers, the current version is `14.0.1.3.2`:
 
 * Liza works on a new feature so she creates a branch for master:
 
@@ -114,43 +114,43 @@ developers, the current version is `12.0.1.3.2`:
 * The end of sprint is close, both propose their branches as pull requests in
     `master`, builds are green!
 * Paul merges the pull requests, prepares a new release and when he's done, he
-    tags `master` with `12.0.1.4.0`
-* Paul tests the image `camptocamp/demo_odoo:12.0.1.4.0` and oops, it seems he
+    tags `master` with `14.0.1.4.0`
+* Paul tests the image `camptocamp/demo_odoo:14.0.1.4.0` and oops, it seems he
     goofed as the image doesn't even start
 * Paul corrects the - hopefully - minor issue and prepare a new release for
-    `12.0.1.4.1`.
+    `14.0.1.4.1`.
 * Liza works on another shiny feature:
     ```
     git checkout origin/master -b impl-blue-css
     git push liza/impl-blue-css
     ```
-* And Greg is assigned to fix a bug on the production server (now in `12.0.1.4.1`),
+* And Greg is assigned to fix a bug on the production server (now in `14.0.1.4.1`),
     so he will do 2 things:
     * create a patch branch **from** the production version:
         ```
-        git checkout 12.0.1.4.1 -b patch-claim-typo
+        git checkout 14.0.1.4.1 -b patch-claim-typo
         git push greg/patch-claim-typo
         ```
-    * ask Paul to create a new patch branch `patch-12.0.1.4.2`, on which he will
+    * ask Paul to create a new patch branch `patch-14.0.1.4.2`, on which he will
         propose his pull request
-* Paul prepare a new release on the `patch-12.0.1.4.2` branch. Once released, Paul merges `patch-12.0.1.4.2` in `master`.
-* At the end of the sprint, Paul prepares the next release `12.0.1.5.0` with the new Liza's feature and so on.
+* Paul prepare a new release on the `patch-14.0.1.4.2` branch. Once released, Paul merges `patch-14.0.1.4.2` in `master`.
+* At the end of the sprint, Paul prepares the next release `14.0.1.5.0` with the new Liza's feature and so on.
 
 ### Detailed instruction
 
 1. Create remote patch branch
 
-    * Figure out target version `number` in format `R.r.x.y.z` (`12.0.1.4.0`) for which
+    * Figure out target version `number` in format `R.r.x.y.z` (`14.0.1.4.0`) for which
         you need to make patch. It can be version released on production or
         integration or specified by PM. Or maybe other case.
     * Create patch branch from target with name `patch-R.r.x.y.next_z`
-        (`patch-12.0.1.4.1`). Where `next_z = z + 1` (`1 = 0 + 1`).
+        (`patch-14.0.1.4.1`). Where `next_z = z + 1` (`1 = 0 + 1`).
         ```git
         git checkout R.r.x.y.z -b patch-R.r.x.y.next_z
         ```
         example
         ```git
-        git checkout 12.0.1.4.0 -b patch-12.0.1.4.1
+        git checkout 14.0.1.4.0 -b patch-14.0.1.4.1
         ```
     * Push new empty branch to repo.
         ```git
@@ -158,7 +158,7 @@ developers, the current version is `12.0.1.3.2`:
         ```
         example
         ```git
-        git push origin patch-12.0.1.4.1
+        git push origin patch-14.0.1.4.1
         ```
         Where `origin` should be camptocamp project repo
 
@@ -172,7 +172,7 @@ developers, the current version is `12.0.1.3.2`:
     * Push your changes to your remote fork repo.
     * Create PR to patch remote project branch.
         ```git
-        camptocamp/generated/patch-R.r.x.y.next_z <- <user_name>/generated/<your_patch_branch>
+        camptocamp/demo_odoo/patch-R.r.x.y.next_z <- <user_name>/demo_odoo/<your_patch_branch>
         ```
     * Request PR review in chat to speedup merge.
     * Merge after reviewers approve your changes.
@@ -187,3 +187,28 @@ developers, the current version is `12.0.1.3.2`:
 
     * **Merge `patch-R.r.x.y.next_z` to `master` to incorporate patch changes
         into master branch.**
+
+
+## What to do when a release has failed?
+
+* If an image was created on Docker hub, as we cannot make sure it has not been
+pulled yet, we better play it safe and create a new release using the next patch 
+number available and setting the release as 'YANKED' in `migration.yml` and 
+`HISTORY.rst`.
+
+* If the image has not been created on Docker hub, nothing prevents us from reusing
+the same number, so the best way to handle this is:
+
+  1. Revert the release commit using `git revert`.
+
+  2. Create a new commit for the release using `invoke release.bump`.
+
+  3. Force the creation of the reused tag:
+     ```
+     git tag -af R.r.x.y.z  # here, copy the changelog in the annotated tag
+     ```
+
+  4. Force the update of tags on the server:
+     ```
+     git push -f --tags && git push
+     ```

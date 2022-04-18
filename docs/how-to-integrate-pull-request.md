@@ -49,14 +49,14 @@ branch and have a submodule referencing a commit that no longer exists.
       OCA: https://github.com/OCA/sale-workflow.git
       camptocamp: https://github.com/camptocamp/sale-workflow.git
     merges:
-      - OCA 12.0
+      - OCA 14.0
       # comment explaining what the PR does (42 is the number of the PR)
       - OCA refs/pull/42/head
     target: camptocamp merge-branch-XXXX-master
   ```
 
   TIP: if your goal is to integrate a pull request,
-  you can use a shorthand like `upstream/repo-name#<pr-number>`.
+  you can use a shorthand like `user/repo-name#<pr-number>`.
   For instance, to integrate the PR `https://github.com/OCA/sale-workflow/pull/42`:
 
   ```bash
@@ -77,7 +77,7 @@ branch and have a submodule referencing a commit that no longer exists.
   - pending merge is being added to the repo w/o pending merges at the moment
     in this case, submodule's remote is set to `camptocamp`
 
-  - after removal of last pending merge (excluding `OCA 12.0` or alike)
+  - after removal of last pending merge (excluding `OCA 14.0` or alike)
     then remote is being set to current repo's parent (assuming that's a fork)
     to resolve the parent, a call Github API is issued
 
@@ -118,6 +118,55 @@ In all the cases if you omit the repo path
 you'll check in all submodules with pending merges.
 
 
+## Stabilize submodules
+
+Once a project is quite stable, it is advised to pin the base commit used in
+the `pending-merges.d/<repo-name>.yml` file.
+When a pending-merge is added for the first time on a submodule, the file will
+contain the following:
+
+```yml
+    [...]
+    merges:
+      - OCA 13.0
+      - OCA refs/pull/212/head
+```
+In this example, if we want to integrate a new PR while the project is now
+running in production, we also want to ensure that this new pending-merge won't
+bring new commits from `OCA/13.0` in the consolidated branch (to avoid regressions).
+To do so, we have to:
+
+1. grab the current base commit from the submodule:
+
+```bash
+    $ cd ./odoo/external-src/{repo-name}
+    $ git fetch OCA  # (considering you have this remote)
+    $ git merge-base OCA/13.0 HEAD
+```
+
+2. update the base commit in `pending-merges.d/<repo-name>.yml` file with it:
+
+```yml
+    [...]
+    merges:
+      - OCA <SHA-1>
+      - OCA refs/pull/212/head
+```
+
+3. if you are the author of the PR you want to integrate, create the development
+branch (in the submodule) from this base commit instead of the latest upstream
+commit:
+
+```bash
+    $ git checkout -b 13.0-fix-module <SHA-1>
+    [then work as usual...]
+```
+
+This way the development branch won't contain latest commits from upstream.
+
+4. add the PR as pending-merge with `invoke submodule.add-pending URL`
+
+
 ## Merging only one distinct commit (cherry-pick)
 
 Sometimes you only want to merge one commit into the consolidated branch (after
@@ -134,20 +183,27 @@ in the corresponding section. Here is an example:
     target: camptocamp merge-branch-XXXX-master
     shell_command_after:
       # Commit from ? Doing what ?
+      -  git fetch camptocamp 6563606f066792682a16936f704d0bdf4bc8429f
       -  git am "$(git format-patch -1 6563606f066792682a16936f704d0bdf4bc8429f -o ../patches)"
   ```
 
-In the previous example the commit numbered 6563606... is searched in all the remotes of the section,
-then a patch file is made and apply to the consolidated branch.
-A file containing the patch will be saved in the patches directory and needs to be added in the commit
+In the previous example the commit numbered 6563606...
+
+1. The commit is fetched from the `camptocamp` remote to ensure it can be found.
+2. The commit is searched in local submodule git history.
+3. A file containing the patch will be saved in the patches directory and needs to be added in the commit
 of the project.
 
-Note: you can add this construction from your CLI, there's an invoke task for you:
-`invoke submodule.add-pending https://github.com/upstream/repo/[tree]/<commit SHA>`
+Notes: you can add this construction from your CLI, there's an invoke task for you:
+`invoke submodule.add-pending https://github.com/user/repo/[tree]/<commit SHA>`
 
 In the example above, this command should be sufficient:
 `invoke submodule.add-pending https://github.com/odoo/enterprise/tree/6563606`.
 
+Fetching is important to be nice to other users while you may have the commit locally
+`git-aggregator` is only aware of commits in the `merges` section of the yaml file.
+For other users rebuilding the submodule would fail if they didn't fetched the extra
+remotes manually.
 
 ## Notes
 

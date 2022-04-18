@@ -1,0 +1,10 @@
+#!/bin/bash
+# This file has been generated with 'invoke project.sync'.
+# Do not modify. Any manual change will be lost.
+# Please propose your modification on
+# https://github.com/camptocamp/odoo-template instead.
+
+# Set the SERVER_ENV_CONFIG (from rancher.env) and
+# SERVER_ENV_CONFIG_SECRET (from rancher.env.gpg) in server environment files
+# Before the the odoo V 11.0 we should set the env file variables on the project not on cloud-platforme
+echo "Odoo version > 10, script ignored"

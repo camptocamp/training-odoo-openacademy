@@ -8,15 +8,16 @@
 from __future__ import print_function
 
 import datetime
+import fileinput
 import fnmatch
 import os
 import shutil
 
-import yaml
 from invoke import task
 
 from .common import (
     GIT_IGNORES,
+    HISTORY_FILE,
     TEMPLATE_GIT,
     TEMPLATE_GIT_REPO_URL,
     ask_or_abort,
@@ -28,6 +29,7 @@ from .common import (
     root_path,
     tempdir,
     update_yml_file,
+    yaml_load,
 )
 
 try:
@@ -41,7 +43,7 @@ SYNC_METADATA = build_path('.sync.yml')
 
 def sync_meta():
     with open(SYNC_METADATA, 'rU') as f:
-        return yaml.load(f.read())
+        return yaml_load(f.read())
 
 
 def update_sync_meta(data):
@@ -147,6 +149,21 @@ def add_comment(path, comment):
     funcs.get(ext, _add_comment_unknown)(path, comment)
 
 
+def add_history_line():
+    unreleased = True
+    for line in fileinput.input(HISTORY_FILE, inplace=True):
+        # add the line after the fist '**Build**' line after the unreleased
+        if line.startswith('**Build**') and unreleased:
+            today = datetime.date.today().strftime('%Y-%m-%d')
+            print(
+                line
+                + "\n* Sync project from odoo-template the {}".format(today)
+            )
+            unreleased = False
+        else:
+            print(line, end='')
+
+
 def get_sync_version(version=None, pinned_version=None):
     """Retrieve version to be used for sync.
 
@@ -178,7 +195,7 @@ def get_sync_version(version=None, pinned_version=None):
 
 @task
 def sync(ctx, commit=True, version=None, fork=None, fork_url=None):
-    """Sync files from the project template.
+    """Sync files from the project template. Use with $ DO_SYNC=1 before
 
     :param commit: commit changes after sync
     :param version: template version to sync. By default: `stable` branch.
@@ -233,10 +250,12 @@ def sync(ctx, commit=True, version=None, fork=None, fork_url=None):
     if fork or fork_url:
         print('Using fork:', git_repo)
 
-    _do_sync(ctx, cc_context, version, git_repo, sync_metadata, commit=commit)
+    _do_sync(ctx, cc_context, version, git_repo, commit=commit)
 
 
-def _do_sync(ctx, cc_context, version, git_repo, sync_metadata, commit=True):
+def _do_sync(ctx, cc_context, version, git_repo, commit=True):
+    # dirty hack to make sure we don't call the cookiecutter post script.
+    os.environ["DO_SYNC"] = "True"
     with tempdir() as tmp:
         cookiecutter(
             git_repo,
@@ -249,16 +268,21 @@ def _do_sync(ctx, cc_context, version, git_repo, sync_metadata, commit=True):
         template = os.path.join(tmp, cc_context['repo_name'])
         selected_files = set()
         with cd(template):
-            include = sync_metadata['sync'].get('include', [])
-            exclude = sync_metadata['sync'].get('exclude', []) + GIT_IGNORES
-            comment = sync_metadata['sync'].get('comment', '')
-            for root, dirs, files in os.walk('.', topdown=True):
-                if exclude:
-                    dirs[:] = _exclude_fnmatch(root, dirs, exclude)
-                    files[:] = _exclude_fnmatch(root, files, exclude)
-                syncfiles = [os.path.join(root, f) for f in files]
-                for incl in include:
-                    selected_files.update(fnmatch.filter(syncfiles, incl))
+            # Read the synchronization list from the *template*, never from
+            # the local file which is ignored. Otherwise, the list of files
+            # to synchronize is obsolete and need manual synchronization.
+            with open(os.path.join(template, '.sync.yml'), 'rU') as syncfile:
+                sync = yaml_load(syncfile.read())
+                include = sync['sync'].get('include', [])
+                exclude = sync['sync'].get('exclude', []) + GIT_IGNORES
+                comment = sync['sync'].get('comment', '')
+                for root, dirs, files in os.walk('.', topdown=True):
+                    if exclude:
+                        dirs[:] = _exclude_fnmatch(root, dirs, exclude)
+                        files[:] = _exclude_fnmatch(root, files, exclude)
+                    syncfiles = [os.path.join(root, f) for f in files]
+                    for incl in include:
+                        selected_files.update(fnmatch.filter(syncfiles, incl))
 
             print('Syncing files:')
             for s in sorted(selected_files):
@@ -278,12 +302,17 @@ def _do_sync(ctx, cc_context, version, git_repo, sync_metadata, commit=True):
         if _exclude_uninstallable_modules_from_pre_commit(ctx):
             selected_files.add('.pre-commit-config.yaml')
 
+        # update history with sync date
+        add_history_line()
+        selected_files.add(HISTORY_FILE)
+
         # update metadata too
         selected_files.add('.sync.yml')
         ctx.run('git add {}'.format(' '.join(selected_files)))
         if commit:
             msg = 'Update project from odoo-template ver: {}'.format(version)
             ctx.run('git commit -m "{}" -e -vv'.format(msg), pty=True)
+    del os.environ["DO_SYNC"]
 
 
 def _exclude_uninstallable_modules_from_pre_commit(ctx):

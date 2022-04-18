@@ -20,7 +20,6 @@ class IrAttachment(models.Model):
     # (camptocamp/odoo-cloud-platform repository).
     store_fname = fields.Char(index=True)
 
-    @api.model_cr
     def init(self):
         env = api.Environment(self._cr, SUPERUSER_ID, {})
         self._init_indexes(env)

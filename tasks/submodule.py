@@ -12,10 +12,12 @@ import re
 from itertools import chain
 
 import requests
+from git import Repo as GitRepo
 from invoke import exceptions, task
 
 from .common import (
     GIT_C2C_REMOTE_NAME,
+    MIGRATION_FILE,
     PENDING_MERGES_DIR,
     ask_confirmation,
     ask_or_abort,
@@ -25,7 +27,9 @@ from .common import (
     exit_msg,
     get_migration_file_modules,
     root_path,
+    yaml_load,
 )
+from .module import Module
 
 try:
     import git_aggregator.config
@@ -37,6 +41,7 @@ except ImportError:
 
 try:
     import git_autoshare  # noqa: F401
+    from git_autoshare.core import find_autoshare_repository
 
     AUTOSHARE_ENABLED = True
 except ImportError:
@@ -137,6 +142,7 @@ class Repo(object):
     @classmethod
     def repositories_from_pending_folder(cls, path=None):
         path = path or PENDING_MERGES_DIR
+        repo_names = []
         for root, dirs, files in os.walk(path):
             repo_names = [
                 os.path.splitext(fname)[0]
@@ -154,7 +160,7 @@ class Repo(object):
 
     def merges_config(self):
         with open(self.abs_merges_path) as f:
-            data = yaml.load(f.read()) or {}
+            data = yaml_load(f.read()) or {}
             submodule_relpath = os.path.join(os.path.pardir, self.path)
             return data.get(submodule_relpath, {})
 
@@ -162,7 +168,7 @@ class Repo(object):
         # get former config if any
         if os.path.exists(self.abs_merges_path):
             with open(self.abs_merges_path, 'r') as f:
-                data = yaml.load(f.read())
+                data = yaml_load(f.read())
         else:
             data = {}
         submodule_relpath = os.path.join(os.path.pardir, self.path)
@@ -201,9 +207,20 @@ def get_target_branch(ctx, target_branch=None):
     If target_branch is given only checks for the override.
     Otherwise create the branch name and check for the override.
     """
-    current_branch = ctx.run(
-        'git symbolic-ref --short HEAD', hide=True
-    ).stdout.strip()
+    for rebase_file in ("rebase-merge", "rebase-apply"):
+        # in case of rebase, the ref of the branch is in one of these
+        # directories, in a file named "head-name"
+        path = ctx.run(
+            "git rev-parse --git-path {}".format(rebase_file), hide=True
+        ).stdout.strip()
+        if os.path.exists(path):
+            with open(os.path.join(path, "head-name")) as rf:
+                current_branch = rf.read().strip().replace("refs/heads/", "")
+            break
+    else:
+        current_branch = ctx.run(
+            'git symbolic-ref --short HEAD', hide=True
+        ).stdout.strip()
     project_id = cookiecutter_context()['project_id']
     if not target_branch:
         commit = ctx.run('git rev-parse HEAD', hide=True).stdout.strip()[:8]
@@ -259,7 +276,17 @@ def init(ctx):
     print()
     print("You can now update odoo/Dockerfile with this addons-path:")
     print()
-    list(ctx)
+    ls(ctx)
+
+
+@task(name="list")
+def deprecated_list(ctx, dockerfile=True):
+    print(
+        '##############################################################\n'
+        'submodule.list is deprecated, please use submodule.ls instead\n'
+        '##############################################################\n'
+    )
+    ls(ctx, dockerfile=dockerfile)
 
 
 @task(
@@ -268,7 +295,7 @@ def init(ctx):
         'of the Dockerfile format'
     }
 )
-def list(ctx, dockerfile=True):
+def ls(ctx, dockerfile=True):
     """List git submodules paths.
 
     It can be used to directly copy-paste the addons paths in the Dockerfile.
@@ -363,7 +390,7 @@ def process_travis_file(ctx, repo):
         with open(tf, 'a') as travis:
             travis.write(BRANCH_EXCLUDE)
 
-        cmd = 'git commit {} -m "Travis: exclude new branch from build"'
+        cmd = 'git commit {} --no-verify -m "Travis: exclude new branch from build"'
         commit = ctx.run(cmd.format(tf), hide=True)
         print("Committed as:\n{}".format(commit.stdout.strip()))
 
@@ -384,7 +411,15 @@ def show_prs(ctx, submodule_path=None, state=None):
     if not repositories:
         exit_msg('No repo to check.')
 
-    pr_info_msg = '{shortcut} in state {state} ({merged})'
+    # NOTE: to collect all this info you must provide your GITHUB_TOKEN.
+    # See git-aggregator README.
+    pr_info_msg = (
+        '#{number} {title}\n'
+        '      State: {state} ({merged})\n'
+        '      Updated at: {updated_at}\n'
+        '      View: {html_url}\n'
+        '      Shortcut: {shortcut}\n'
+    )
     all_repos_prs = {}
     for repo in repositories:
         aggregator = repo.get_aggregator()
@@ -399,14 +434,23 @@ def show_prs(ctx, submodule_path=None, state=None):
         for pr_state, prs in all_prs.items():
             print('State:', pr_state)
             for i, pr_info in enumerate(prs, 1):
+                if 'raw' not in pr_info:
+                    exit_msg("Upgrade git-aggregator to 1.7.2 or later")
                 all_repos_prs.setdefault(pr_state, []).append(pr_info)
-                print('  {})'.format(i), pr_info_msg.format(**pr_info))
+                pr_info['raw'].update(pr_info)
+                print(
+                    '  {})'.format(str(i).zfill(2)),
+                    pr_info_msg.format(**pr_info['raw']),
+                )
     return all_repos_prs
 
 
 @task
-def show_closed_prs(ctx, submodule_path=None, purge_closed=False):
-    """Show all closed pull requests in pending merges.
+def show_closed_prs(
+    ctx, submodule_path=None, purge_closed=False, purge_merged=False
+):
+    """Show all closed and unmerged pull requests in pending merges.
+
 
     Pass nothing to check all submodules.
     Pass `-s path/to/submodule` to check specific ones.
@@ -415,26 +459,96 @@ def show_closed_prs(ctx, submodule_path=None, purge_closed=False):
         ctx, submodule_path=submodule_path, state='closed'
     )
 
-    if purge_closed:
+    closed_prs = all_repos_prs.get('closed', [])
+    closed_unmerged_prs = [
+        pr for pr in closed_prs if pr.get('merged') == 'not merged'
+    ]
+    closed_merged_prs = [
+        pr for pr in closed_prs if pr.get('merged') == 'merged'
+    ]
+
+    # This list will received all closed and unmerged pr's url to return
+    # If purge_closed is set to True, removed prs will not be returned
+    unmerged_prs_urls = [pr.get('url') for pr in closed_unmerged_prs]
+
+    if closed_unmerged_prs and purge_closed:
         print('Purging closed ones...')
-        for closed_pr_info in all_repos_prs.get('closed', []):
+        for closed_pr_info in closed_unmerged_prs:
+            try:
+                remove_pending(ctx, closed_pr_info['shortcut'])
+                unmerged_prs_urls.remove(closed_pr_info.get('url'))
+            except exceptions.Failure as e:
+                print(
+                    "An error occurs during '{}' removal : {}".format(
+                        closed_pr_info.get('url'), e
+                    )
+                )
+    if closed_merged_prs and purge_merged:
+        print('Purging merged ones...')
+        for closed_pr_info in closed_merged_prs:
             remove_pending(ctx, closed_pr_info['shortcut'])
+    return unmerged_prs_urls
+
+
+def _cmd_git_submodule_update(ctx, path, url):
+    update_cmd = 'git submodule update --init'
+
+    if AUTOSHARE_ENABLED:
+        index, ar = find_autoshare_repository([url])
+        if ar:
+            if not os.path.exists(ar.repo_dir):
+                ar.prefetch(True)
+            update_cmd += ' --reference {}'.format(ar.repo_dir)
+    update_cmd = update_cmd + ' ' + path
+    print(update_cmd)
+    ctx.run(update_cmd)
 
 
 @task
 def update(ctx, submodule_path=None):
-    """Synchronize and update given submodule path
+    """Initialize or update submodules
+
+    Synchronize submodules and then launch `git submodule update --init`
+    for each submodule.
+
+    If `git-autoshare` is configured locally, it will add `--reference` to
+    fetch data from local cache.
 
     :param submodule_path: submodule path for a precise sync & update
+
     """
     sync_cmd = 'git submodule sync'
-    update_cmd = 'git submodule update --init'
+
+    gitmodules = build_path('.gitmodules')
+    paths = ctx.run(
+        "git config --file %s "
+        "--get-regexp 'path' | awk '{ print $2 }' " % (gitmodules,),
+        hide=True,
+    )
+    urls = ctx.run(
+        "git config --file %s "
+        "--get-regexp 'url' | awk '{ print $2 }' " % (gitmodules,),
+        hide=True,
+    )
+
+    module_list = list(
+        zip(paths.stdout.splitlines(), urls.stdout.splitlines())
+    )
+
     if submodule_path is not None:
+        submodule_path = os.path.normpath(submodule_path)
         sync_cmd += ' -- {}'.format(submodule_path)
-        update_cmd += ' -- {}'.format(submodule_path)
+        module_list = [
+            (path, url)
+            for path, url in module_list
+            if os.path.normpath(path) == submodule_path
+        ]
+
     with cd(root_path()):
         ctx.run(sync_cmd)
-        ctx.run(update_cmd)
+
+        for path, url in module_list:
+            _cmd_git_submodule_update(ctx, path, url)
 
 
 @task
@@ -461,7 +575,7 @@ def sync_remote(ctx, submodule_path=None, repo=None, force_remote=False):
         with open(repo.abs_merges_path) as pending_merges:
             # read everything we can reach
             # for reading purposes only
-            data = yaml.load(pending_merges.read())
+            data = yaml_load(pending_merges.read())
             submodule_pending_config = data[
                 os.path.join(os.path.pardir, repo.path)
             ]
@@ -568,12 +682,14 @@ def parse_github_url(entity_spec):
                 '/'
             )[3:7]
         except ValueError:
-            exit_msg(
+            msg = (
                 "Could not parse: {}.\n"
                 "Accept formats are either:\n"
-                "* Full url: https://github.com/namespace/repo/pull/1234/files#diff-deadbeef\n"
-                "* Short ref: remote/repo#pull-request-id".format(entity_spec)
-            )
+                "* Full PR URL: https://github.com/user/repo/pull/1234/files#diff-deadbeef\n"
+                "* Short PR ref: user/repo#pull-request-id"
+                "* Cherry-pick URL: https://github.com/user/repo/[tree]/<commit SHA>"
+            ).format(entity_spec)
+            exit_msg(msg)
 
     # force uppercase in OCA upstream name:
     # otherwise `oca` and `OCA` are treated as different namespaces
@@ -680,12 +796,14 @@ def add_pending_pull_request(repo, conf, upstream, pull_id):
 
 
 def add_pending_commit(repo, conf, upstream, commit_sha):
+    # TODO search in local git history for full hash
     if len(commit_sha) < 40:
         ask_or_abort(
             "You are about to add a patch referenced by a short commit SHA.\n"
             "It's recommended to use fully qualified 40-digit hashes though.\n"
             "Continue?"
         )
+    fetch_commit_line = "git fetch {} {}".format(upstream, commit_sha)
     pending_mrg_line = 'git am "$(git format-patch -1 {} -o ../patches)"'.format(
         commit_sha
     )
@@ -699,22 +817,24 @@ def add_pending_commit(repo, conf, upstream, commit_sha):
     if 'shell_command_after' not in conf:
         conf['shell_command_after'] = CommentedSeq()
 
-    # TODO: make comments great again
-    # This snippet was written according to ruamel.yaml docs, though not a
-    # single attempt to preserve/provide comments was successful
-    # https://yaml.readthedocs.io/en/latest/example.html
-    # comment = input(
-    #     'Comment? '
-    #     '(would appear just above new pending merge, optional):\n')
-    # conf['shell_command_after'].insert(1, pending_mrg_line, comment)
-    conf['shell_command_after'].insert(1, pending_mrg_line)
+    # TODO propose a default comment format
+    comment = input(
+        'Comment? ' '(would appear just above new pending merge, optional):\n'
+    )
+    conf['shell_command_after'].extend([fetch_commit_line, pending_mrg_line])
+    # Add a comment in the list of shell commands
+    pos = conf['shell_command_after'].index(fetch_commit_line)
+    conf['shell_command_after'].yaml_set_comment_before_after_key(
+        pos, before=comment, indent=2
+    )
+    print("📋 cherry pick {}/{} has been added".format(upstream, commit_sha))
 
 
 @task
 def add_pending(ctx, entity_url):
     """Add a pending merge using given entity link"""
     check_pending_merge_version()
-    # pattern, given an https://github.com/<upstream>/<repo>/pull/<pr-index>
+    # pattern, given an https://github.com/<user>/<repo>/pull/<pr-index>
     # # PR headline
     # # PR link as is
     # - refs/pull/<pr-index>/head
@@ -730,7 +850,6 @@ def add_pending(ctx, entity_url):
         generate_pending_merges_file_template(repo, upstream)
 
     conf = repo.merges_config()
-    # TODO: adding comments doesn't really work :/
     if entity_type == 'pull':
         add_pending_pull_request(repo, conf, upstream, entity_id)
     elif entity_type in ('commit', 'tree'):
@@ -742,18 +861,26 @@ def add_pending(ctx, entity_url):
 
 
 def remove_pending_commit(repo, conf, upstream, commit_sha):
-    line_to_drop = 'git am "$(git format-patch -1 {} -o ../patches)"'.format(
-        commit_sha
-    )
-    if line_to_drop not in conf.get('shell_command_after', {}):
+    lines_to_drop = [
+        'git fetch {} {}'.format(upstream, commit_sha),
+        'git am "$(git format-patch -1 {} -o ../patches)"'.format(commit_sha),
+    ]
+    if lines_to_drop[0] not in conf.get(
+        'shell_command_after', {}
+    ) and lines_to_drop[1] not in conf.get('shell_command_after', {}):
         exit_msg(
             'No such reference found in {},'
             ' having troubles removing that:\n'
-            'Looking for: {}'.format(repo.abs_merges_path, line_to_drop)
+            'Looking for:\n- {}\n- {}'.format(
+                repo.abs_merges_path, lines_to_drop[0], lines_to_drop[1]
+            )
         )
-    conf['shell_command_after'].remove(line_to_drop)
+    for line in lines_to_drop:
+        if line in conf:
+            conf['shell_command_after'].remove(line)
     if not conf['shell_command_after']:
         del conf['shell_command_after']
+    print("✨ cherry pick {}/{} has been removed".format(upstream, commit_sha))
 
 
 def remove_pending_pull(repo, conf, upstream, pull_id):
@@ -800,11 +927,27 @@ def remove_pending(ctx, entity_url):
         repo.update_merges_config(config)
 
 
+def get_dependency_module_list(modules):
+    """ Get dependency modules from a list of modules
+    construct the dependency list from existing modules in addons_path
+
+    """
+    todo = modules[:]
+    deps = []
+    while todo:
+        current = todo.pop()
+        for d in Module(current).get_dependencies():
+            if d not in modules and d not in deps and d not in todo:
+                todo.append(d)
+                deps.append(d)
+    return deps
+
+
 @task
 def list_external_dependencies_installed(ctx, submodule_path):
-    """List installed modules a specific directory.
+    """List installed modules of a specific directory.
 
-        Compare the modules one the submodule path with the installed
+        Compare the modules in the submodule path against the installed
         module in odoo/migration.yml.
 
         eg:
@@ -819,16 +962,173 @@ def list_external_dependencies_installed(ctx, submodule_path):
 
           so contain account_cutoff_base + account_cutoff_prepaid are returned
 
-        # TODO: to cherry-pick things from odoo-template/pull/134
-        # TODO: create inverse methode -> for all installed modules retrive
-            the external path
     """
-    migration_modules = get_migration_file_modules('odoo/migration.yml')
-    print(
-        "\nInstalled modules for {} :\n".format(submodule_path.split('/')[-1])
-    )
+    migration_modules = get_migration_file_modules(MIGRATION_FILE)
+    print("\nInstalled modules from {}:\n".format(submodule_path))
+    modules = []
     with cd(submodule_path):
         for mod in os.listdir():
             if mod in migration_modules:
+                modules.append(mod)
                 print("\t- " + mod)
-    print('\nCAREFULL /!\\ \nDependencies are not included in this list')
+
+    # Construct a dependency name list by submodule
+    submodules = {}
+    deps = get_dependency_module_list(modules)
+    for dep in deps:
+        sub = Module(dep).dir
+        if sub in modules:
+            continue
+        if sub not in submodules:
+            submodules[sub] = []
+        submodules[sub].append(dep)
+
+    if not submodules:
+        return
+    print("\n\nDependencies:")
+    submodule_names = submodules.keys()
+    submodule_names = sorted(submodule_names)
+    # Display dependencies
+    for sub in submodule_names:
+        deps = submodules[sub]
+        print("\n{} :".format(sub))
+        for mod in deps:
+            print("\t- " + mod)
+
+
+def _get_current_commit_from_submodule(ctx, path):
+    """Returns the current in stage commit for a submodule path
+    """
+    ref_cmd = "git submodule status | grep '%s' | awk '{ print $1 }'" % path
+    commit_hash = ctx.run(ref_cmd, hide=True).stdout
+    # Clean for last carriage return and + at the beginning if stage has changed
+    return commit_hash.strip('\n').strip('+')
+
+
+def _cmd_git_submodule_upgrade(ctx, path, url, branch=None):
+    """Force update of a submodule.
+
+    If a branch is given, the submodule will be reset and checkout
+    """
+    current_ref = _get_current_commit_from_submodule(ctx, path)
+    reference_url = url
+    if AUTOSHARE_ENABLED:
+        index, ar = find_autoshare_repository([url])
+        if ar:
+            if not os.path.exists(ar.repo_dir):
+                ar.prefetch(True)
+            reference_url = ar.repo_dir
+
+    if branch:
+        with cd(build_path(path)):
+            checkout_cmd = (
+                "git reset HEAD --hard &&\
+                            git fetch %s &&\
+                            git checkout %s"
+                % (url, branch)
+            )
+            print(checkout_cmd)
+            ctx.run(checkout_cmd)
+    else:
+        upgrade_cmd = (
+            "git submodule update -f --remote "
+            "--checkout --reference {} {}".format(reference_url, path)
+        )
+        print(upgrade_cmd)
+        ctx.run(upgrade_cmd)
+
+    upgraded_ref = _get_current_commit_from_submodule(ctx, path)
+    if current_ref != upgraded_ref:
+        print(
+            "-- UPGRADED from '{}' to '{}'".format(current_ref, upgraded_ref)
+        )
+    else:
+        print("-- NOT UPGRADED")
+
+
+@task
+def upgrade(ctx, submodule_path=None, force_branch=None):
+    """Update and upgrade a submodule to it's latest commit.
+    Or all submodules if a submodule path is not specified.
+
+    If a module has a pending merges in state `closed` and `not merged`, it will
+    not be processed by this method but a list these pull requests is returned.
+
+    Prerequisites:
+        A submodule MUST BE BASED on a valid remote branch (An issue will occurs
+        if not).
+    """
+    odoo_version = cookiecutter_context().get('odoo_version')
+    project_repo = GitRepo(root_path())
+    submodules = project_repo.submodules
+    unmerged_prs = []
+
+    if submodule_path:
+        submodules = [sm for sm in submodules if sm.path == submodule_path]
+
+    with cd(root_path()):
+        for submodule in submodules:
+            print('--')
+            print('-- Upgrading:', submodule.name)
+            print('-- Path:', submodule.path)
+            print('-- Branch:', submodule.branch_name)
+            branch = None
+            sub_repo = Repo(submodule.path, path_check=False)
+            try:
+
+                # First pass to close pr's
+                # But close `merged` PR's only, not `not merged` !
+                if sub_repo.has_pending_merges():
+                    print('-- Merge file:', sub_repo.merges_path)
+                    unmerged_prs.extend(
+                        show_closed_prs(ctx, sub_repo.path, purge_merged=True)
+                    )
+
+                # Still pending left > merges to update
+                if sub_repo.has_pending_merges():
+                    merges(ctx, sub_repo.path, push=True)
+                    continue
+
+                # No more pending > Upgrade !
+
+                # To avoid issue while upgrading in a branch that does not
+                # exists in the remote or is detached, we must confirm that
+                # branch named differently that the Odoo version is properly
+                # indicated in the gitmodule
+                if force_branch:
+                    branch = force_branch
+                elif (
+                    submodule.branch_name != odoo_version and not force_branch
+                ):
+                    if ask_confirmation(
+                        "Configured target branch differs from current project"
+                        " major version (this can lead to impossible upgrade,"
+                        " you should also properly indicate it in the"
+                        " gitmodules file). "
+                        "Replace by odoo version '%s'?" % odoo_version
+                    ):
+                        branch = odoo_version
+
+                # Update to avoid further issues if in bad state
+                update(ctx, sub_repo.path)
+                # Try to effectively upgrade the submodule
+                _cmd_git_submodule_upgrade(
+                    ctx, sub_repo.path, submodule.url, branch
+                )
+            except Exception as e:
+                # Rollback to previous version
+                update(ctx, sub_repo.path)
+                print(
+                    "ERROR: occurs during '{}' upgrade : {}".format(
+                        submodule.name, e
+                    )
+                )
+    if unmerged_prs:
+        print("\nCAREFULL /!\\")
+        print(
+            "The following closed PR's could NOT be processed automatically,"
+        )
+        print("you have to manually manage them :")
+        for unmerged_pr in unmerged_prs:
+            print("- {}".format(unmerged_pr))
+    return unmerged_prs

@@ -44,7 +44,7 @@ migration:
           #### local-src
           # - my_addon
     # update step example
-    # - version: 12.0.x.y.z
+    # - version: 14.0.x.y.z
     #   addons:
     #     upgrade:
     #       - foo_module

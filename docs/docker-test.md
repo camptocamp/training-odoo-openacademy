@@ -18,12 +18,10 @@ Be sure to [install Docker and docker-compose](prerequisite.md) before going any
 
         git clone git@github.com:camptocamp/demo_odoo.git demo
 
-2. Login to Docker Hub (create an account on https://hub.docker.com/ if you
-   don't have one yet and ask to be added to the Camptocamp team because this
-   is a private project)
-
-        docker login
-        # answer to the questions
+2. Login to Github Packages (create an token on your [github account](https://docs.github.com/en/free-pro-team@latest/github/authenticating-to-github/creating-a-personal-access-token) 
+        
+        export CR_PAT=<YourToken>
+        echo $CR_PAT | docker login ghcr.io -u $USER --password-stdin
 
 3. Start the composition
 

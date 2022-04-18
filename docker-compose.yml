@@ -50,7 +50,7 @@ services:
       - "data-db:/var/lib/postgresql/data"
 
   nginx:
-    image: camptocamp/odoo-nginx:12.0-1.5.0
+    image: camptocamp/odoo-nginx:14.0-1.5.0
     depends_on:
       - odoo
     ports:

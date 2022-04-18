@@ -1,4 +1,4 @@
-FROM camptocamp/odoo-project:12.0-3.1.2
+FROM camptocamp/odoo-project:14.0-3.1.2
 LABEL maintainer="Camptocamp"
 
 # Steps are grouped by dependency

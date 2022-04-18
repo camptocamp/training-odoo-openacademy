@@ -21,7 +21,7 @@ services:
       CI: 'True'
 
   db:
-    image: camptocamp/postgres:9.5
+    image: ghcr.io/camptocamp/postgres:12-postgis3
     command: -c shared_buffers=256MB -c maintenance_work_mem=256MB -c wal_buffers=8MB -c effective_cache_size=1024MB
     environment:
       POSTGRES_USER: odoo

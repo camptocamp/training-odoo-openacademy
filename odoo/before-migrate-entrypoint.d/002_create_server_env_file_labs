@@ -1,0 +1,21 @@
+#!/bin/bash
+# This file has been generated with 'invoke project.sync'.
+# Do not modify. Any manual change will be lost.
+# Please propose your modification on
+# https://github.com/camptocamp/odoo-template instead.
+
+# Generate a directory in 'server_environment_files' for
+# the labs environment. If the directory does not exist,
+# 'server_environment' raises an error, besides, it allows
+# to set a ribbon with the labs' name
+
+if [ "${RUNNING_ENV:0:4}" = "labs" ] ; then
+    env_path="/odoo/local-src/server_environment_files/${RUNNING_ENV}"
+    if [ ! -d "$env_path" ] ; then
+      mkdir "$env_path"
+      cat << EOF > "$env_path/base.conf"
+[ir.config_parameter]
+ribbon.name=${RUNNING_ENV}
+EOF
+    fi
+fi

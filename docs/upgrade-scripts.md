@@ -95,7 +95,7 @@ In the `migration.yml` file, it means we have to add a pre/post operation in
 the current version:
 
 ```yaml
-    - version: 12.0.0
+    - version: 14.0.0
       operations:
         post:
           - anthem songs.install.post::main
@@ -118,14 +118,14 @@ You can force it to execute an upgrade again with the `MARABUNTA_FORCE_VERSION`
 environment variable:
 
 ```
-$ docker-compose run --rm -e MARABUNTA_FORCE_VERSION=12.0.0 odoo
+$ docker-compose run --rm -e MARABUNTA_FORCE_VERSION=14.0.0 odoo
 ```
 
 With the command above, odoo will be run at the end of the migration.
 You could also run only `migrate` which will exit the container once done.
 
 ```
-$ docker-compose run --rm -e MARABUNTA_FORCE_VERSION=12.0.0 odoo migrate
+$ docker-compose run --rm -e MARABUNTA_FORCE_VERSION=14.0.0 odoo migrate
 ```
 
 ### Execute the upgrade for a given mode
@@ -134,7 +134,7 @@ Modes allow to run additional commands.
 
 ```yaml
   versions:
-    - version: 12.0.0
+    - version: 14.0.0
       operations:
         pre:
           - anthem songs.install.pre::main
@@ -209,7 +209,7 @@ You should just declare `base` in the addons section, like this:
 
 ```yaml
   versions:
-    - version: 12.0.1
+    - version: 14.0.1
       addons:
         upgrade:
           - base

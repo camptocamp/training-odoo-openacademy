@@ -1,0 +1,35 @@
+#!/bin/bash
+# This file has been generated with 'invoke project.sync'.
+# Do not modify. Any manual change will be lost.
+# Please propose your modification on
+# https://github.com/camptocamp/odoo-template instead.
+
+#
+# Often in development mode, we retrieve a database from a production server
+# with jobs currently or near to be executed.
+# This script automatically set them as "failed" to avoid costly operations
+# when starting the instance and thus saving time.
+#
+# To avoid jobs to be canceled you can set the environment variable JOB_DISABLE.
+#
+
+job_disable=$(echo "${JOB_DISABLE}" | tr '[:upper:]' '[:lower:]' )
+
+if [ ! -z $job_disable ] && ([ "$job_disable" = "false" ] || [ "$job_disable" = "0" ]) ; then
+    exit 0
+fi
+if [ "$RUNNING_ENV" = "dev" ] ; then
+    if [ "$( psql -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" )" != '1' ]
+    then
+        echo "Database does not exist, ignoring script"
+        exit 0
+    fi
+    echo "Disabling jobs..."
+    psql << EOF
+
+    UPDATE queue_job
+    SET state='failed'
+    WHERE state IN ('pending', 'enqueued', 'started');
+
+EOF
+fi

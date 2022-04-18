@@ -37,7 +37,7 @@ if [ "$RUNNING_ENV" = "dev" ] ; then
         SELECT value
         FROM ir_config_parameter
         WHERE key = 'ir_attachment.location'
-        AND value in ('s3', 'swift')
+        AND value in ('s3', 'swift', 'azure')
     );
 
 EOF
@@ -53,7 +53,7 @@ EOF
         SELECT value
         FROM ir_config_parameter
         WHERE key = 'ir_attachment.location'
-        AND value in ('s3', 'swift')
+        AND value in ('s3', 'swift', 'azure')
     );
 
 EOF
