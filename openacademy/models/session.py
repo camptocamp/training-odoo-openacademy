@@ -31,7 +31,6 @@ class Session(models.Model):
         default='draft',
     )
 
-    @api.model
     def _selection_state(self):
         return [('draft', "Draft"),
                 ('confirmed', "Confirmed"),
@@ -71,14 +70,11 @@ class Session(models.Model):
                 },
             }
 
-    @api.multi
     def action_draft(self):
         self.write({'state': 'draft'})
 
-    @api.multi
     def action_confirm(self):
         self.write({'state': 'confirmed'})
 
-    @api.multi
     def action_done(self):
         self.write({'state': 'done'})

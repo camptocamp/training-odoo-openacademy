@@ -19,7 +19,6 @@ class Register(models.TransientModel):
         string="Attendees",
     )
 
-    @api.multi
     def subscribe(self):
         for session in self.session_ids:
             session.attendee_ids |= self.attendee_ids
