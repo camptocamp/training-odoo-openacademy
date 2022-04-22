@@ -1,4 +1,4 @@
-FROM ghcr.io/camptocamp/odoo-project:14.0-4.4.3
+FROM ghcr.io/camptocamp/odoo-project:14.0-4.3.0
 LABEL maintainer="Camptocamp"
 
 # Steps are grouped by dependency
