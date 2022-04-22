@@ -19,12 +19,14 @@
     </field>
   </record>
 
-  <act_window id="launch_session_wizard"
-              name="Add Attendees"
-              src_model="openacademy.session"
-              res_model="openacademy.register"
-              view_mode="form"
-              target="new"
-              key2="client_action_multi"/>
+  <record model="ir.actions.act_window" id="launch_session_wizard">
+    <field name="name">Add Attendees</field>
+    <field name="res_model">openacademy.register</field>
+    <field name="view_mode">form</field>
+    <field name="target">new</field>
+    <field name="context">{}</field>
+    <field name="binding_model_id" ref="model_openacademy_session"/>
+    <field name="binding_view_types">list</field>
+  </record>
 
 </odoo>
