@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <openerp>
 <data>
-  <report
-    id="report_session"
-    model="openacademy.session"
-    string="Session Report"
-    name="openacademy.report_session_view"
-    file="openacademy.report_session"
-    report_type="qweb-pdf" />
+    <record id="report_session" model="ir.actions.report">
+        <field name="name">Session</field>
+        <field name="model">openacademy.session</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">openacademy.report_session</field>
+        <field name="report_file">openacademy.report_session</field>
+        <field name="print_report_name">(object.name)</field>
+        <field name="attachment">(object.name)</field>
+        <field name="binding_model_id" ref="model_openacademy_session"/>
+        <field name="binding_type">report</field>
+    </record>
 
   <template id="report_session_view">
-    <t t-call="report.html_container">
+    <t t-call="web.html_container">
       <t t-foreach="docs" t-as="doc">
-        <t t-call="report.external_layout">
+        <t t-call="web.external_layout">
           <div class="page">
             <h2 t-field="doc.name"/>
             <p>From <span t-field="doc.start_date"/> during <span t-field="doc.duration"/> days</p>
