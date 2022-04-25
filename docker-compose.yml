@@ -33,6 +33,7 @@ services:
       DB_NAME: odoodb
       ADMIN_PASSWD: admin
       RUNNING_ENV: dev
+      DEMO: "True"
       # Enable if you use oca/queue_job:
       # ODOO_CONNECTOR_CHANNELS: root:4
       # SERVER_WIDE_MODULES: web,queue_job
