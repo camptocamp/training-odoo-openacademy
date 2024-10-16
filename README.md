@@ -7,10 +7,10 @@ This project uses Docker.
 
 To get a working instance, initialize the required submodules:
 
-  $ git submodule add -b 14.0 git@github.com:OCA/OCB.git ./odoo/src
-  $ git submodule add -b 14.0 git@github.com:OCA/server-env.git ./odoo/external-src/server-env
-  $ git submodule add -b 14.0 git@github.com:OCA/server-ux.git ./odoo/external-src/server-ux
-  $ git submodule add -b 14.0 git@github.com:OCA/web.git ./odoo/external-src/web
+  $ git submodule add -b 16.0 git@github.com:OCA/OCB.git ./odoo/src
+  $ git submodule add -b 16.0 git@github.com:OCA/server-env.git ./odoo/external-src/server-env
+  $ git submodule add -b 16.0 git@github.com:OCA/server-ux.git ./odoo/external-src/server-ux
+  $ git submodule add -b 16.0 git@github.com:OCA/web.git ./odoo/external-src/web
 
 When a container starts, the database is automatically created and the
 migration scripts automatically run.

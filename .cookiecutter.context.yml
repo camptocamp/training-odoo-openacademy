@@ -1,5 +1,5 @@
 customer_name: demo
-odoo_version: '14.0'
+odoo_version: '16.0'
 customer_shortname: demo
 repo_name: generated
 project_id: '0000'

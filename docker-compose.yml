@@ -6,7 +6,6 @@
 # to your needs it will automatically be applied on top of this
 # file when the option '-f' of docker-compose is not used
 
-version: '2'
 services:
   odoo:
     build: ./odoo/

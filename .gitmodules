@@ -1,206 +1,206 @@
 [submodule "odoo/src"]
 	path = odoo/src
 	url = git@github.com:OCA/OCB.git
-	branch = 14.0
+	branch = 16.0
 
 ; Camptocamp
 ;[submodule "odoo/external-src/odoo-dj"]
 ;	path = odoo/external-src/odoo-dj
 ;	url = git@github.com:camptocamp/odoo-dj.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/odoo-cloud-platform"]
 ;	path = odoo/external-src/odoo-cloud-platform
 ;	url = git@github.com:camptocamp/odoo-cloud-platform.git
-;	branch = 14.0
+;	branch = 16.0
 
 ; Enterprise
 ;[submodule "odoo/external-src/enterprise"]
 ;	path = odoo/external-src/enterprise
 ;	url = git@github.com:odoo/enterprise.git
-;	branch = 14.0
+;	branch = 16.0
 
 ; OCA
 ;[submodule "odoo/external-src/account-closing"]
 ;	path = odoo/external-src/account-closing
 ;	url = git@github.com:OCA/account-closing.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/account-consolidation"]
 ;	path = odoo/external-src/account-consolidation
 ;	url = git@github.com:OCA/account-consolidation.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/account-analytic"]
 ;	path = odoo/external-src/account-analytic
 ;	url = git@github.com:OCA/account-analytic.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/account-financial-reporting"]
 ;	path = odoo/external-src/account-financial-reporting
 ;	url = git@github.com:OCA/account-financial-reporting.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/account-financial-tools"]
 ;	path = odoo/external-src/account-financial-tools
 ;	url = git@github.com:OCA/account-financial-tools.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/account-invoicing"]
 ;	path = odoo/external-src/account-invoicing
 ;	url = git@github.com:OCA/account-invoicing.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/account-reconcile"]
 ;	path = odoo/external-src/account-reconcile
 ;	url = git@github.com:OCA/account-reconcile.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/bank-payment"]
 ;	path = odoo/external-src/bank-payment
 ;	url = git@github.com:OCA/bank-payment.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/bank-statement-import"]
 ;	path = odoo/external-src/bank-statement-import
 ;	url = git@github.com:OCA/bank-statement-import.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/credit-control"]
 ;	path = odoo/external-src/credit-control
 ;	url = git@github.com:OCA/credit-control.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/crm"]
 ;	path = odoo/external-src/crm
 ;	url = git@github.com:OCA/crm.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/ddmrp"]
 ;	path = odoo/external-src/ddmrp
 ;	url = git@github.com:OCA/ddmrp.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/delivery-carrier"]
 ;	path = odoo/external-src/delivery-carrier
 ;	url = git@github.com:OCA/delivery-carrier.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/event"]
 ;	path = odoo/external-src/event
 ;	url = git@github.com:OCA/event.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/hr"]
 ;	path = odoo/external-src/hr
 ;	url = git@github.com:OCA/hr.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/intrastat"]
 ;	path = odoo/external-src/intrastat
 ;	url = git@github.com:OCA/intrastat.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/maintenance"]
 ;	path = odoo/external-src/maintenance
 ;	url = git@github.com:OCA/maintenance.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/manufacture"]
 ;	path = odoo/external-src/manufacture
 ;	url = git@github.com:OCA/manufacture.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/mis-builder"]
 ;	path = odoo/external-src/mis-builder
 ;	url = git@github.com:OCA/mis-builder.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/partner-contact"]
 ;	path = odoo/external-src/partner-contact
 ;	url = git@github.com:OCA/partner-contact.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/pos"]
 ;	path = odoo/external-src/pos
 ;	url = git@github.com:OCA/pos.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/product-attribute"]
 ;	path = odoo/external-src/product-attribute
 ;	url = git@github.com:OCA/product-attribute.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/product-variant"]
 ;	path = odoo/external-src/product-variant
 ;	url = git@github.com:OCA/product-variant.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/project"]
 ;	path = odoo/external-src/project
 ;	url = git@github.com:OCA/project.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/purchase-workflow"]
 ;	path = odoo/external-src/purchase-workflow
 ;	url = git@github.com:OCA/purchase-workflow.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/rma"]
 ;	path = odoo/external-src/rma
 ;	url = git@github.com:OCA/rma.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/report-print-send"]
 ;	path = odoo/external-src/report-print-send
 ;	url = git@github.com:OCA/report-print-send.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/reporting-engine"]
 ;	path = odoo/external-src/reporting-engine
 ;	url = git@github.com:OCA/reporting-engine.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/sale-workflow"]
 ;	path = odoo/external-src/sale-workflow
 ;	url = git@github.com:OCA/sale-workflow.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/server-auth"]
 ;	path = odoo/external-src/server-auth
 ;	url = git@github.com:OCA/server-auth.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/server-brand"]
 ;	path = odoo/external-src/server-brand
 ;	url = git@github.com:OCA/server-brand.git
-;	branch = 14.0
+;	branch = 16.0
 [submodule "odoo/external-src/server-env"]
 	path = odoo/external-src/server-env
 	url = git@github.com:OCA/server-env.git
-	branch = 14.0
+	branch = 16.0
 ;[submodule "odoo/external-src/server-tools"]
 ;	path = odoo/external-src/server-tools
 ;	url = git@github.com:OCA/server-tools.git
-;	branch = 14.0
+;	branch = 16.0
 [submodule "odoo/external-src/server-ux"]
 	path = odoo/external-src/server-ux
 	url = git@github.com:OCA/server-ux.git
-	branch = 14.0
+	branch = 16.0
 ;[submodule "odoo/external-src/stock-logistics-workflow"]
 ;	path = odoo/external-src/stock-logistics-workflow
 ;	url = git@github.com:OCA/stock-logistics-workflow.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/stock-logistics-warehouse"]
 ;	path = odoo/external-src/stock-logistics-warehouse
 ;	url = git@github.com:OCA/stock-logistics-warehouse.git
-;	branch = 14.0
+;	branch = 16.0
 [submodule "odoo/external-src/web"]
 	path = odoo/external-src/web
 	url = git@github.com:OCA/web.git
-	branch = 14.0
+	branch = 16.0
 ;[submodule "odoo/external-src/website"]
 ;	path = odoo/external-src/website
 ;	url = git@github.com:OCA/website.git
-;	branch = 14.0
+;	branch = 16.0
 
 ;	Localizations
 ;[submodule "odoo/external-src/l10n-france"]
 ;	path = odoo/external-src/l10n-france
 ;	url = git@github.com:OCA/l10n-france.git
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/l10n-switzerland"]
 ;	path = odoo/external-src/l10n-switzerland
 ;	url = git@github.com:OCA/l10n-switzerland.git
-;	branch = 14.0
+;	branch = 16.0
 
 ; Connectors
 ;[submodule "odoo/external-src/queue"]
 ;	path = odoo/external-src/queue
 ;	url = git@github.com:OCA/queue
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/connector"]
 ;	path = odoo/external-src/connector
 ;	url = git@github.com:OCA/connector
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/connector-ecommerce"]
 ;	path = odoo/external-src/connector-ecommerce
 ;	url = git@github.com:OCA/connector-ecommerce
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/connector-magento"]
 ;	path = odoo/external-src/connector-magento
 ;	url = git@github.com:OCA/connector-magento
-;	branch = 14.0
+;	branch = 16.0
 ;[submodule "odoo/external-src/connector-prestashop"]
 ;	path = odoo/external-src/connector-prestashop
 ;	url = git@github.com:OCA/connector-prestashop
-;	branch = 14.0
+;	branch = 16.0
